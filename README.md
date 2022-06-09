@@ -15,10 +15,15 @@ daily_read generate single <ordererID> <location>
 daily_read upload all
 daily_read upload --orderer
 
-# Start a basic server to display all generated reports
+# Start a basic server to display all generated reports - NOT FOR PRODUCTION
 daily_read serve --location
 ```
 
 # Configuration variables
 
 Configuration is dealt with via environment variables. Simplest way to set it up is to retrieve a `.env` file based on the `.env.example` provided in the repo. Environment variables which are not set have default variables in `daily_read/config.py`.
+
+# Contributors
+
+Johannes Alneberg
+Anandashankar Anil
