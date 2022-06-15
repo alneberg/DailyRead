@@ -16,15 +16,35 @@ config = daily_read.config.Config()
 def daily_read_cli():
     pass
 
-@daily_read_cli.command()
+### GENERATE ###
+@daily_read_cli.group()
 def generate():
     """Generate reports and save in a local git repository"""
-    print(config.DAILY_READ_ORDER_PORTAL_URL)
+    pass
 
+@generate.command(name='all')
+def generate_all():
+    pass
 
-@daily_read_cli.command()
+@generate.command(name='single')
+@click.argument('orderer')
+@click.argument('location')
+def generate_single():
+    pass
+
+### UPLOAD ###
+@daily_read_cli.group()
 def upload():
     """Upload reports to the order portal"""
+    pass
+
+@upload.command(name='all')
+def upload_all():
+    pass
+
+@upload.command(name='single')
+@click.argument('orderer')
+def upload_single(orderer):
     pass
 
 @daily_read_cli.command()
