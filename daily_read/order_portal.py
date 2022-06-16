@@ -1,7 +1,12 @@
 """Module to handle order portal interaction"""
 
-from daily_read import config_values
+# Standard
 import logging
+
+# installed
+import requests
+
+from daily_read import config_values
 
 log = logging.getLogger(__name__)
 
@@ -21,4 +26,19 @@ class OrderPortal(object):
 
         self.base_url = base_url
         self.headers = {'X-OrderPortal-API-key': api_key}
+        self.all_orders = None
 
+
+    def __get(self, url, params):
+        full_url = f"{self.base_url}/{url}"
+        return requests.get(full_url, headers=self.headers, params=params)
+
+    def get_orders(self, orderer=None, recent=True):
+        """recent==True would give only 500 most recent orders"""
+        if orderer is None:
+            # Fetch all orders
+            response = self.__get('orders/api/v1/orders', params={'recent': recent})
+            self.all_orders = response.json()
+        else:
+            # Not yet implemented in orderportal api
+            pass

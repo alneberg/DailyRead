@@ -36,6 +36,11 @@ def generate():
 @generate.command(name='all')
 def generate_all():
     op = daily_read.order_portal.OrderPortal()
+    op.get_orders()
+    # TODO - not sure how to proceed, fetching ALL projects in order portal 
+    # and then generate reports seems quite slow and wasteful, but I haven't 
+    # tried so it might work. Maybe a pull model where we only generate reports 
+    # for projects that we know have been updated can be a better alternative?
 
 @generate.command(name='single')
 @click.argument('orderer')
