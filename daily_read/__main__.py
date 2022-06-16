@@ -1,20 +1,31 @@
 #!/usr/bin/env python
 """The Daily Read, a utility to generate and upload automatic progress reports for NGI Sweden."""
 
+# Standard
+import logging
+import sys
+
 # Installed
 import click
-import logging
 
-import daily_read
-import daily_read.config
+# Own
+import daily_read.order_portal
+
+from daily_read import config_values
 
 log = logging.getLogger()
 
-config = daily_read.config.Config()
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 def daily_read_cli():
     pass
+
+def daily_read_safe_cli():
+    try:
+        daily_read_cli()
+    except ValueError as e:
+        log.error(e)
+        sys.exit(1)
 
 ### GENERATE ###
 @daily_read_cli.group()
@@ -24,7 +35,7 @@ def generate():
 
 @generate.command(name='all')
 def generate_all():
-    pass
+    op = daily_read.order_portal.OrderPortal()
 
 @generate.command(name='single')
 @click.argument('orderer')
