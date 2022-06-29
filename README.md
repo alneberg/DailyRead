@@ -13,7 +13,7 @@ daily_read generate single <ordererID> <location>
 
 # the upload command 
 daily_read upload all
-daily_read upload --orderer
+daily_read upload single <orderer>
 
 # Start a basic server to display all generated reports - NOT FOR PRODUCTION
 daily_read serve --location
