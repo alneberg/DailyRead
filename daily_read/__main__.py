@@ -10,6 +10,7 @@ import click
 
 # Own
 import daily_read.order_portal
+import daily_read.daily_report
 
 from daily_read import config_values
 
@@ -37,16 +38,34 @@ def generate():
 def generate_all():
     op = daily_read.order_portal.OrderPortal()
     op.get_orders()
-    # TODO - not sure how to proceed, fetching ALL projects in order portal 
-    # and then generate reports seems quite slow and wasteful, but I haven't 
-    # tried so it might work. Maybe a pull model where we only generate reports 
+    # TODO - not sure how to proceed, fetching ALL projects in order portal
+    # and then generate reports seems quite slow and wasteful, but I haven't
+    # tried so it might work. Maybe a pull model where we only generate reports
     # for projects that we know have been updated can be a better alternative?
+    all_sthlm_orders = op.process_orders(use_node='Stockholm')
+    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+
+    for owner in all_sthlm_orders:
+        report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
+        import pdb; pdb.set_trace()
+        for project in all_sthlm_orders[owner]['projects']:
+            op.upload_report_to_order_portal(report, project['iuid'])
+
 
 @generate.command(name='single')
 @click.argument('orderer')
-@click.argument('location')
-def generate_single():
-    pass
+@click.option('-l', '--location', type=click.Choice(['Stockholm', 'Uppsala'], case_sensitive=False))
+def generate_single(orderer, location):
+    op = daily_read.order_portal.OrderPortal()
+    op.get_orders(orderer=orderer, node=location)
+    orders = op.process_orders(use_node=location)
+    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    for owner in orders:
+        report = daily_rep.populate_and_write_report(owner, orders[owner])
+        for project in orders[owner]['projects']:
+            op.upload_report_to_order_portal(report, project['iuid'])
+
+
 
 ### UPLOAD ###
 @daily_read_cli.group()

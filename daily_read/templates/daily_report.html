@@ -82,7 +82,7 @@
 
                 <div id="header_owner">
                     <h2><small>
-                            Generated for {{owner}}
+                            Generated for {{ pi_email }}
                         </small>
                     </h2>
                 </div>
@@ -113,39 +113,56 @@
 
 
         <div id="projects_list">
+          {% set priority = {1:['all_raw_data_delivered', 'All Raw Data delivered'], 2: ['all_samples_sequenced', 'All Samples sequenced'],
+                              3: ['qc_library_finished', 'Library QC finished'], 4: ['queued', 'Reception Control finished'],
+                              5: ['samples_received', 'Samples received']}
+           %}
+          {% for project in data['projects']%}
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <a data-toggle="collapse" href="#panel_project_a">
+                    <a data-toggle="collapse" href="#panel_project_{{ project['project_id'] }}">
                         <div class="row">
                             <div class="col-md-9">
-                                <h2 class="panel-title">Project A <span class="caret"></span></h2>
+                                <h2 class="panel-title">{{ project['project_name'] }} <span class="caret"></span></h2>
                             </div>
-                            <div class="col-md-3 text-right">Last updated: 2022-05-19</div>
+                            <!-- What should last updated be? -->
+                            <div class="col-md-3 text-right">Last updated: {{ data['pull_date'] }}</div>
                         </div>
                     </a>
                 </div>
-                <div class="panel-body collapse" id="panel_project_a">
-                    <h2>Sequencing started - 2022-05-19</h2>
-                    <h4>Library prepration started - 2022-04-31</h4>
-                    <h4>Samples received - 2022-04-14</h4>
+                <div class="panel-body collapse" id="panel_project_{{ project['project_id'] }}">
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
+                      Samples Received
+                    </div>
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
+                      Library preparation started
+                    </div>
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
+                      Sequencing started
+                    </div>
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
+                      All Samples sequenced
+                    </div>
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
+                      All Raw Data delivered
+                    </div>
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 16.65%">
+                      Project closed
+                    </div>
+                  </div>
+                  {% set vars = {'h2_set': false }%}
+                  {% for date_prio in priority %}
+                    {% if priority[date_prio][0] in project['proj_dates'] and not vars.h2_set %}
+                        <h2>{{ priority[date_prio][1] }} - {{ project['proj_dates'][priority[date_prio][0]] }}</h2>
+                        {% if vars.update({'h2_set': True}) %} {% endif %}
+                    {% else %}
+                        <h4>{{ priority[date_prio][1] }} - {{ project['proj_dates'][priority[date_prio][0]] }}</h4>
+                    {%endif%}
+                  {% endfor %}
                 </div>
             </div>
-
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <a data-toggle="collapse" href="#panel_project_b">
-                        <div class="row">
-                            <div class="col-md-9">
-                                <h2 class="panel-title">Project B <span class="caret"></span></h2>
-                            </div>
-                            <div class="col-md-3 text-right">Last updated: 2022-04-15</div>
-                        </div>
-                    </a>
-                </div>
-                <div class="panel-body collapse" id="panel_project_b">
-                    Panel content
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 
