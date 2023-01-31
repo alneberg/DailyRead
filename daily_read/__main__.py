@@ -47,7 +47,6 @@ def generate_all():
 
     for owner in all_sthlm_orders:
         report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
-        import pdb; pdb.set_trace()
         for project in all_sthlm_orders[owner]['projects']:
             op.upload_report_to_order_portal(report, project['iuid'])
 

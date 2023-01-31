@@ -28,7 +28,6 @@ class DailyReport(object):
 
         pull_date = f"{datetime.datetime.strptime(data['pull_date'], '%Y-%m-%d %H:%M:%S.%f').date()}"
         data['pull_date'] = pull_date
-        import pdb; pdb.set_trace()
         filled_report = self.template.render(pi_email=pi_email, data=data)
         if out_dir:
             file_name = os.path.join(out_dir, f"{pi_email.split('@')[0]}_{pull_date}.html")
