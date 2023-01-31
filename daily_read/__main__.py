@@ -46,15 +46,13 @@ def generate_all():
     # tried so it might work. Maybe a pull model where we only generate reports
     # for projects that we know have been updated can be a better alternative?
     all_sthlm_orders = op.process_orders(use_node="Stockholm")
-    daily_rep = daily_read.daily_report.DailyReport(
-        config_values.DAILY_READ_REPORTS_LOCATION
-    )
+    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
 
     for owner in all_sthlm_orders:
         report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
-        import pdb
+        for project in all_sthlm_orders[owner]["projects"]:
+            op.upload_report_to_order_portal(report, project["iuid"])
 
-        pdb.set_trace()
         for project in all_sthlm_orders[owner]["projects"]:
             op.upload_report_to_order_portal(report, project["iuid"])
 
@@ -70,9 +68,7 @@ def generate_single(orderer, location):
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)
     orders = op.process_orders(use_node=location)
-    daily_rep = daily_read.daily_report.DailyReport(
-        config_values.DAILY_READ_REPORTS_LOCATION
-    )
+    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
     for owner in orders:
         report = daily_rep.populate_and_write_report(owner, orders[owner])
         for project in orders[owner]["projects"]:
