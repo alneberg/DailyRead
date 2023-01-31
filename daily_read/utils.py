@@ -20,9 +20,7 @@ class StatusdbSession(object):
         )
         self.connection = couchdb.Server(url=url_string)
         if not self.connection:
-            raise Exception(
-                "Couchdb connection failed for url {}".format(display_url_string)
-            )
+            raise Exception("Couchdb connection failed for url {}".format(display_url_string))
         if db:
             self.db_connection = self.connection[db]
 
