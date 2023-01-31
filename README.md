@@ -2,6 +2,22 @@
 
 A utility to generate and upload automatic progress reports for NGI Sweden.
 
+## Suggested logic
+
+- The script first fetches data from the appropriate NGI source, i.e. statusdb for Stockholm.
+- The data corresponding to each project will then be saved in a small data file (json, yaml or csv perhaps) on disk.
+- Git will be used to track the directory where these files are kept (between runs of the script).
+- Git status (inside python) will be used to check which projects has changes in there data since the last run and those projects will be selected.
+- These projects will be fetched from the order portal and furthermore all other projects with the same orderer will be fetched in a second round.
+- For each orderer, a report will be generated with potentially several projects.
+- Reports are uploaded to each project.
+
+### Potential issues/questions
+  - Not sure how well the order portal api supports fetching and filtering projects in this manner?
+  - We need to make sure the reports are transparent about timestamps when it was last updated
+  - The second round of fetching projects risk fetching a long list of old and closed projects, we probably need a cutoff of some sort
+  
+
 ## Planned Usage (yet to be implemented)
 
 ```bash
