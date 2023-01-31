@@ -21,6 +21,7 @@ log = logging.getLogger()
 def daily_read_cli():
     pass
 
+
 def daily_read_safe_cli():
     try:
         daily_read_cli()
@@ -28,13 +29,15 @@ def daily_read_safe_cli():
         log.error(e)
         sys.exit(1)
 
+
 ### GENERATE ###
 @daily_read_cli.group()
 def generate():
     """Generate reports and save in a local git repository"""
     pass
 
-@generate.command(name='all')
+
+@generate.command(name="all")
 def generate_all():
     op = daily_read.order_portal.OrderPortal()
     op.get_orders()
@@ -42,29 +45,38 @@ def generate_all():
     # and then generate reports seems quite slow and wasteful, but I haven't
     # tried so it might work. Maybe a pull model where we only generate reports
     # for projects that we know have been updated can be a better alternative?
-    all_sthlm_orders = op.process_orders(use_node='Stockholm')
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    all_sthlm_orders = op.process_orders(use_node="Stockholm")
+    daily_rep = daily_read.daily_report.DailyReport(
+        config_values.DAILY_READ_REPORTS_LOCATION
+    )
 
     for owner in all_sthlm_orders:
         report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
-        import pdb; pdb.set_trace()
-        for project in all_sthlm_orders[owner]['projects']:
-            op.upload_report_to_order_portal(report, project['iuid'])
+        import pdb
+
+        pdb.set_trace()
+        for project in all_sthlm_orders[owner]["projects"]:
+            op.upload_report_to_order_portal(report, project["iuid"])
 
 
-@generate.command(name='single')
-@click.argument('orderer')
-@click.option('-l', '--location', type=click.Choice(['Stockholm', 'Uppsala'], case_sensitive=False))
+@generate.command(name="single")
+@click.argument("orderer")
+@click.option(
+    "-l",
+    "--location",
+    type=click.Choice(["Stockholm", "Uppsala"], case_sensitive=False),
+)
 def generate_single(orderer, location):
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)
     orders = op.process_orders(use_node=location)
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    daily_rep = daily_read.daily_report.DailyReport(
+        config_values.DAILY_READ_REPORTS_LOCATION
+    )
     for owner in orders:
         report = daily_rep.populate_and_write_report(owner, orders[owner])
-        for project in orders[owner]['projects']:
-            op.upload_report_to_order_portal(report, project['iuid'])
-
+        for project in orders[owner]["projects"]:
+            op.upload_report_to_order_portal(report, project["iuid"])
 
 
 ### UPLOAD ###
@@ -73,14 +85,17 @@ def upload():
     """Upload reports to the order portal"""
     pass
 
-@upload.command(name='all')
+
+@upload.command(name="all")
 def upload_all():
     pass
 
-@upload.command(name='single')
-@click.argument('orderer')
+
+@upload.command(name="single")
+@click.argument("orderer")
 def upload_single(orderer):
     pass
+
 
 @daily_read_cli.command()
 def serve():
