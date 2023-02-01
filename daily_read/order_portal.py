@@ -17,7 +17,6 @@ class OrderPortal(object):
     """Class to handle NGI order portal interaction"""
 
     def __init__(self):
-
         base_url = config_values.DAILY_READ_ORDER_PORTAL_URL
         api_key = config_values.DAILY_READ_ORDER_PORTAL_API_KEY
 
