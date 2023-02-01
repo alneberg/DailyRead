@@ -46,6 +46,7 @@ def generate_all():
     # tried so it might work. Maybe a pull model where we only generate reports
     # for projects that we know have been updated can be a better alternative?
     all_sthlm_orders = op.process_orders(use_node="Stockholm")
+    #TODO: Should clean up...
     daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
 
     for owner in all_sthlm_orders:
@@ -64,6 +65,7 @@ def generate_all():
     "--location",
     type=click.Choice(["Stockholm", "Uppsala"], case_sensitive=False),
 )
+#TODO: is it possible to filter on orderer and location together in the API?
 def generate_single(orderer, location):
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)

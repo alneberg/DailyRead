@@ -131,6 +131,7 @@
                     </a>
                 </div>
                 <div class="panel-body collapse" id="panel_project_{{ project['project_id'] }}">
+                  <!-- TODO: Rewrite progress bars and make text bigger too-->
                   <div class="progress">
                     <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="5" style="width: 16.67%">
                       Samples Received
@@ -152,6 +153,7 @@
                     </div>
                   </div>
                   {% set vars = {'h2_set': false }%}
+                  #TODO: try sorting the dict
                   {% for date_prio in priority %}
                     {% if priority[date_prio][0] in project['proj_dates'] and not vars.h2_set %}
                         <h2>{{ priority[date_prio][1] }} - {{ project['proj_dates'][priority[date_prio][0]] }}</h2>
