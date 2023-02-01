@@ -12,23 +12,17 @@ class Config(object):
         except IOError as e:
             pass
 
-        self.DAILY_READ_ORDER_PORTAL_URL = os.getenv(
-            "DAILY_READ_ORDER_PORTAL_URL", conf["DAILY_READ_ORDER_PORTAL_URL"]
+        self.ORDER_PORTAL_URL = os.getenv("DAILY_READ_ORDER_PORTAL_URL", conf.get("DAILY_READ_ORDER_PORTAL_URL"))
+        self.ORDER_PORTAL_API_KEY = os.getenv(
+            "DAILY_READ_ORDER_PORTAL_API_KEY", conf.get("DAILY_READ_ORDER_PORTAL_API_KEY")
         )
-        self.DAILY_READ_ORDER_PORTAL_API_KEY = os.getenv(
-            "DAILY_READ_ORDER_PORTAL_API_KEY", conf["DAILY_READ_ORDER_PORTAL_API_KEY"]
-        )
-        self.DAILY_READ_REPORTS_LOCATION = os.getenv(
-            "DAILY_READ_REPORTS_LOCATION", conf["DAILY_READ_REPORTS_LOCATION"]
-        )
-        self.DAILY_READ_NGIS_URL = os.getenv("DAILY_READ_NGIS_URL")
-        self.DAILY_READ_SNPSEQ_URL = os.getenv("DAILY_READ_SNPSEQ_URL")
-        self.STHLM_STATUSDB_URL = os.getenv(
-            "STHLM_STATUSDB_URL", conf["STHLM_STATUSDB_URL"]
-        )
+        self.REPORTS_LOCATION = os.getenv("DAILY_READ_REPORTS_LOCATION", conf.get("DAILY_READ_REPORTS_LOCATION"))
+        self.DATA_LOCATION = os.getenv("DAILY_READ_DATA_LOCATION", conf.get("DAILY_READ_REPORTS_LOCATION"))
+        self.STHLM_STATUSDB_URL = os.getenv("DAILY_READ_STHLM_STATUSDB_URL", conf.get("DAILY_READ_STHLM_STATUSDB_URL"))
         self.STHLM_STATUSDB_USERNAME = os.getenv(
-            "STHLM_STATUSDB_USERNAME", conf["STHLM_STATUSDB_USERNAME"]
+            "DAILY_READ_STHLM_STATUSDB_USERNAME", conf.get("DAILY_READ_STHLM_STATUSDB_USERNAME")
         )
         self.STHLM_STATUSDB_PASSWORD = os.getenv(
-            "STHLM_STATUSDB_PASSWORD", conf["STHLM_STATUSDB_PASSWORD"]
+            "DAILY_READ_STHLM_STATUSDB_PASSWORD", conf.get("DAILY_READ_STHLM_STATUSDB_PASSWORD")
         )
+        self.SNPSEQ_URL = os.getenv("DAILY_READ_SNPSEQ_URL")
