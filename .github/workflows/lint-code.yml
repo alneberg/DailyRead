@@ -1,0 +1,23 @@
+name: Daily Read code formatting
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  release:
+    types: [published]
+
+# Cancel if a newer run is started
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  PythonBlack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check code lints with Black
+        uses: psf/black@stable
