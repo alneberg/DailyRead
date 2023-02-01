@@ -17,7 +17,6 @@ class OrderPortal(object):
     """Class to handle NGI order portal interaction"""
 
     def __init__(self):
-
         base_url = config_values.DAILY_READ_ORDER_PORTAL_URL
         api_key = config_values.DAILY_READ_ORDER_PORTAL_API_KEY
 
@@ -25,9 +24,7 @@ class OrderPortal(object):
             raise ValueError("environment variable DAILY_READ_ORDER_PORTAL_URL not set")
 
         if api_key is None:
-            raise ValueError(
-                "Environment variable DAILY_READ_ORDER_PORTAL_API_KEY not set"
-            )
+            raise ValueError("Environment variable DAILY_READ_ORDER_PORTAL_API_KEY not set")
 
         self.base_url = base_url
         self.headers = {"X-OrderPortal-API-key": api_key}
@@ -62,24 +59,17 @@ class OrderPortal(object):
 
         order_updates = {}
         pull_date = datetime.datetime.now()
-        older_than_cutoff = (
-            pull_date - datetime.timedelta(days=closed_before_in_days)
-        ).date()
+        older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
         statusdb_sess = StatusdbSession(config_values, db="projects")
         for order in self.all_orders:
             process_order = True
             if use_node:
-                process_order = (
-                    order.get("fields", {}).get("assigned_node", "") == use_node
-                )
+                process_order = order.get("fields", {}).get("assigned_node", "") == use_node
 
             if process_order:
                 if (
                     order["status"] == "closed"
-                    and datetime.datetime.strptime(
-                        order["history"]["closed"], "%Y-%m-%d"
-                    ).date()
-                    >= older_than_cutoff
+                    and datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date() >= older_than_cutoff
                 ):
                     continue
                 proj_info = statusdb_sess.get_entry(order["identifier"])
@@ -88,9 +78,7 @@ class OrderPortal(object):
                     proj_info[order["identifier"]]["iuid"] = order["iuid"]
                     pi_email = order["owner"]["email"]
                     if pi_email in order_updates:
-                        order_updates[pi_email]["projects"].append(
-                            proj_info[order["identifier"]]
-                        )
+                        order_updates[pi_email]["projects"].append(proj_info[order["identifier"]])
                     else:
                         order_updates[pi_email] = {
                             "pull_date": f"{pull_date}",
