@@ -1,0 +1,6 @@
+printWidth: 120
+overrides:
+    - files:
+          - "*.html"
+      options:
+          parser: jinja-template
