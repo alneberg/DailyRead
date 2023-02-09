@@ -7,6 +7,7 @@ import sys
 
 # Installed
 import click
+from rich.logging import RichHandler
 
 # Own
 import daily_read.order_portal
@@ -14,7 +15,14 @@ import daily_read.daily_report
 
 from daily_read import config_values
 
-log = logging.getLogger()
+
+logging.basicConfig(
+    level="INFO",
+    format="%(message)s",
+    handlers=[RichHandler()],
+)
+
+log = logging.getLogger(__name__)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -25,7 +33,7 @@ def daily_read_cli():
 def daily_read_safe_cli():
     try:
         daily_read_cli()
-    except ValueError as e:
+    except Exception as e:
         log.error(e)
         sys.exit(1)
 
