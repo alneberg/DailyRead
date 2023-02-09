@@ -47,7 +47,7 @@ def generate_all():
     # for projects that we know have been updated can be a better alternative?
     all_sthlm_orders = op.process_orders(use_node="Stockholm")
     # TODO: Should clean up...
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    daily_rep = daily_read.daily_report.DailyReport(config_values.REPORTS_LOCATION)
 
     for owner in all_sthlm_orders:
         report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
@@ -72,7 +72,7 @@ def generate_single(orderer, location):
     orders = op.process_orders(use_node=location)
     daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
     for owner in orders:
-        report = daily_rep.populate_and_write_report(owner, orders[owner])
+        report = daily_rep.populate_and_write_report(owner, orders[owner], config_values.REPORTS_LOCATION)
         for project in orders[owner]["projects"]:
             op.upload_report_to_order_portal(report, project["iuid"])
 

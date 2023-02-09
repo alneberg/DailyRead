@@ -1,9 +1,14 @@
 import os
 import yaml
 
+from dotenv import load_dotenv
+
 
 class Config(object):
     def __init__(self, config_file):
+
+        load_dotenv()
+
         conf = {}
         try:
             with open(config_file, "r") as f:
