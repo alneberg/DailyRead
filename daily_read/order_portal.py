@@ -38,7 +38,7 @@ class OrderPortal(object):
 
     def get_orders(self, node=None, status=None, orderer=None, recent=True):
         """recent==True would give only 500 most recent orders"""
-
+        log.info("Fetching orders")
         params = {}
         if node:
             params["assigned_node"] = node
@@ -51,10 +51,17 @@ class OrderPortal(object):
                 year = "recent"
             params["year"] = year
             response = self.__get("/api/v1/orders", params)
-            self.all_orders = response.json()["items"]
         else:
             response = self.__get(f"/api/v1/account/{orderer}/orders", params)
+
+        try:
             self.all_orders = response.json()["orders"]
+        except requests.exceptions.JSONDecodeError as e:
+            log.critical(
+                f"Could not fetch orders for {{node: {node}, status: {status}, orderer={orderer}, recent={recent}}}"
+            )
+            raise
+        log.info(f"Fetched {len(self.all_orders)} order(s) from the Order Portal")
 
     def process_orders(self, use_node="", closed_before_in_days=7):
         """process orders"""
@@ -99,6 +106,7 @@ class OrderPortal(object):
         }
         # Encoded to utf-8 to display special characters properly
         response = requests.put(url, headers=headers, data=report.encode("utf-8"))
+
         assert response.status_code == 200, (response.status_code, response.reason)
 
         log.info(f"Updated report for order with iuid: {order_iuid}")

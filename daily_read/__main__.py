@@ -80,7 +80,9 @@ def generate_single(orderer, location, upload):
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)
     orders = op.process_orders(use_node=location)
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    log.info(f"Found {len(orders)} order(s)")
+
+    daily_rep = daily_read.daily_report.DailyReport()
     for owner in orders:
         report = daily_rep.populate_and_write_report(owner, orders[owner], config_values.REPORTS_LOCATION)
         for project in orders[owner]["projects"]:
