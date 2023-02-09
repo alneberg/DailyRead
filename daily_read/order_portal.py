@@ -1,8 +1,9 @@
 """Module to handle order portal interaction"""
 
 # Standard
-import logging
 import datetime
+import logging
+from urllib.parse import urljoin
 
 # installed
 import requests
@@ -31,7 +32,8 @@ class OrderPortal(object):
         self.all_orders = None
 
     def __get(self, url, params):
-        full_url = f"{self.base_url}/{url}"
+        full_url = urljoin(self.base_url, url)
+
         return requests.get(full_url, headers=self.headers, params=params)
 
     def get_orders(self, node=None, status=None, orderer=None, recent=True):
