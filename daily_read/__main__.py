@@ -73,8 +73,10 @@ def generate_all():
     "--location",
     type=click.Choice(["Stockholm", "Uppsala"], case_sensitive=False),
 )
+@click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
 # TODO: is it possible to filter on orderer and location together in the API?
-def generate_single(orderer, location):
+def generate_single(orderer, location, upload):
+    log.info(f"Order portal URL: {config_values.ORDER_PORTAL_URL}")
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)
     orders = op.process_orders(use_node=location)
@@ -82,7 +84,8 @@ def generate_single(orderer, location):
     for owner in orders:
         report = daily_rep.populate_and_write_report(owner, orders[owner], config_values.REPORTS_LOCATION)
         for project in orders[owner]["projects"]:
-            op.upload_report_to_order_portal(report, project["iuid"])
+            if upload:
+                op.upload_report_to_order_portal(report, project["iuid"])
 
 
 ### UPLOAD ###
