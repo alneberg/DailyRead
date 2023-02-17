@@ -45,6 +45,8 @@ Configuration is dealt with via environment variables. Simplest way to set it up
 ### Formatting with Black and Prettier
 
 This project is set up to use black and prettier to check code formatting. Please make sure these are enabled in your editor.
+If you're having trouble getting prettier and black to work together, have a look at the following issue (with solution):
+https://github.com/microsoft/vscode/issues/136179
 
 ### Getting prettier jinja plugin to work on VSCode
 
