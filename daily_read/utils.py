@@ -3,7 +3,7 @@
 import couchdb
 import logging
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class StatusdbSession(object):

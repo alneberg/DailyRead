@@ -7,6 +7,7 @@ import sys
 
 # Installed
 import click
+from rich.logging import RichHandler
 
 # Own
 import daily_read.order_portal
@@ -14,7 +15,14 @@ import daily_read.daily_report
 
 from daily_read import config_values
 
-log = logging.getLogger()
+
+logging.basicConfig(
+    level="INFO",
+    format="%(message)s",
+    handlers=[RichHandler()],
+)
+
+log = logging.getLogger(__name__)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -25,7 +33,7 @@ def daily_read_cli():
 def daily_read_safe_cli():
     try:
         daily_read_cli()
-    except ValueError as e:
+    except Exception as e:
         log.error(e)
         sys.exit(1)
 
@@ -47,7 +55,7 @@ def generate_all():
     # for projects that we know have been updated can be a better alternative?
     all_sthlm_orders = op.process_orders(use_node="Stockholm")
     # TODO: Should clean up...
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    daily_rep = daily_read.daily_report.DailyReport(config_values.REPORTS_LOCATION)
 
     for owner in all_sthlm_orders:
         report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
@@ -65,16 +73,21 @@ def generate_all():
     "--location",
     type=click.Choice(["Stockholm", "Uppsala"], case_sensitive=False),
 )
+@click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
 # TODO: is it possible to filter on orderer and location together in the API?
-def generate_single(orderer, location):
+def generate_single(orderer, location, upload):
+    log.info(f"Order portal URL: {config_values.ORDER_PORTAL_URL}")
     op = daily_read.order_portal.OrderPortal()
     op.get_orders(orderer=orderer, node=location)
     orders = op.process_orders(use_node=location)
-    daily_rep = daily_read.daily_report.DailyReport(config_values.DAILY_READ_REPORTS_LOCATION)
+    log.info(f"Found {len(orders)} order(s)")
+
+    daily_rep = daily_read.daily_report.DailyReport()
     for owner in orders:
-        report = daily_rep.populate_and_write_report(owner, orders[owner])
+        report = daily_rep.populate_and_write_report(owner, orders[owner], config_values.REPORTS_LOCATION)
         for project in orders[owner]["projects"]:
-            op.upload_report_to_order_portal(report, project["iuid"])
+            if upload:
+                op.upload_report_to_order_portal(report, project["iuid"])
 
 
 ### UPLOAD ###

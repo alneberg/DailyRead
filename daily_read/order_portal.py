@@ -1,8 +1,9 @@
 """Module to handle order portal interaction"""
 
 # Standard
-import logging
 import datetime
+import logging
+from urllib.parse import urljoin
 
 # installed
 import requests
@@ -17,26 +18,27 @@ class OrderPortal(object):
     """Class to handle NGI order portal interaction"""
 
     def __init__(self):
-        base_url = config_values.DAILY_READ_ORDER_PORTAL_URL
-        api_key = config_values.DAILY_READ_ORDER_PORTAL_API_KEY
+        base_url = config_values.ORDER_PORTAL_URL
+        api_key = config_values.ORDER_PORTAL_API_KEY
 
         if base_url is None:
-            raise ValueError("environment variable DAILY_READ_ORDER_PORTAL_URL not set")
+            raise ValueError("environment variable ORDER_PORTAL_URL not set")
 
         if api_key is None:
-            raise ValueError("Environment variable DAILY_READ_ORDER_PORTAL_API_KEY not set")
+            raise ValueError("Environment variable ORDER_PORTAL_API_KEY not set")
 
         self.base_url = base_url
         self.headers = {"X-OrderPortal-API-key": api_key}
         self.all_orders = None
 
     def __get(self, url, params):
-        full_url = f"{self.base_url}/{url}"
+        full_url = urljoin(self.base_url, url)
+
         return requests.get(full_url, headers=self.headers, params=params)
 
     def get_orders(self, node=None, status=None, orderer=None, recent=True):
         """recent==True would give only 500 most recent orders"""
-
+        log.info("Fetching orders")
         params = {}
         if node:
             params["assigned_node"] = node
@@ -49,10 +51,17 @@ class OrderPortal(object):
                 year = "recent"
             params["year"] = year
             response = self.__get("/api/v1/orders", params)
-            self.all_orders = response.json()["items"]
         else:
             response = self.__get(f"/api/v1/account/{orderer}/orders", params)
+
+        try:
             self.all_orders = response.json()["orders"]
+        except requests.exceptions.JSONDecodeError as e:
+            log.critical(
+                f"Could not fetch orders for {{node: {node}, status: {status}, orderer={orderer}, recent={recent}}}"
+            )
+            raise
+        log.info(f"Fetched {len(self.all_orders)} order(s) from the Order Portal")
 
     def process_orders(self, use_node="", closed_before_in_days=7):
         """process orders"""
@@ -97,6 +106,7 @@ class OrderPortal(object):
         }
         # Encoded to utf-8 to display special characters properly
         response = requests.put(url, headers=headers, data=report.encode("utf-8"))
+
         assert response.status_code == 200, (response.status_code, response.reason)
 
         log.info(f"Updated report for order with iuid: {order_iuid}")
