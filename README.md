@@ -4,17 +4,17 @@ A utility to generate and upload automatic progress reports for NGI Sweden.
 
 ## Suggested logic
 
-* The script first fetches data from the appropriate NGI source, i.e. statusdb for Stockholm.
-* The data corresponding to each project will then be saved in a small data file (json, yaml or csv perhaps) on disk.
-* Git will be used to track the directory where these files are kept (between runs of the script).
-* Git status (inside python) will be used to check which projects has changes in their data since the last run and those projects will be selected.
-* For each orderer, fetch all their recent projects from Order Portal. A report will be generated with potentially several projects.
-* Reports are uploaded to each project.
-* We need to make sure the reports are transparent about timestamps when it was last updated  - Javascript?
-* If problems to upload to a project?
-  * Report to error log (cron will email this)
-  * Do not stage these changes, will make sure that the orderer is re-tried next time.
-  * Continue with next project
+- The script first fetches data from the appropriate NGI source, i.e. statusdb for Stockholm.
+- The data corresponding to each project will then be saved in a small data file (json, yaml or csv perhaps) on disk.
+- Git will be used to track the directory where these files are kept (between runs of the script).
+- Git status (inside python) will be used to check which projects has changes in their data since the last run and those projects will be selected.
+- For each orderer, fetch all their recent projects from Order Portal. A report will be generated with potentially several projects.
+- Reports are uploaded to each project.
+- We need to make sure the reports are transparent about timestamps when it was last updated - Javascript?
+- If problems to upload to a project?
+  - Report to error log (cron will email this)
+  - Do not stage these changes, will make sure that the orderer is re-tried next time.
+  - Continue with next project
 
 Also see diagram below:
 
@@ -61,5 +61,5 @@ Then remember to restart VSCode and it should work.
 
 ## Contributors
 
-* Johannes Alneberg
-* Anandashankar Anil
+- Johannes Alneberg
+- Anandashankar Anil
