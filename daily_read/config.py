@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 class Config(object):
     def __init__(self):
-
         load_dotenv()
 
         self.ORDER_PORTAL_URL = os.getenv("DAILY_READ_ORDER_PORTAL_URL")
