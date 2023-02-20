@@ -12,6 +12,7 @@ from rich.logging import RichHandler
 # Own
 import daily_read.order_portal
 import daily_read.daily_report
+import daily_read.ngi_data
 
 from daily_read import config_values
 
@@ -47,7 +48,26 @@ def generate():
 
 @generate.command(name="all")
 def generate_all():
-    op = daily_read.order_portal.OrderPortal()
+    # Fetch data from all sources (configurable)
+    sources = []
+    if config_values.FETCH_FROM_NGIS:
+        sources.append(daily_read.ngi_data.StockholmProjectData(config_values))
+    if config_values.FETCH_FROM_SNPSEQ:
+        sources.append(daily_read.ngi_data.SNPSEQProjectData(config_values))
+    if config_values.FETCH_FROM_UGC:
+        sources.append(daily_read.ngi_data.UGCProjectData(config_values))
+
+    projects_data = daily_read.ngi_data.ProjectDataMaster(config_values, sources)
+
+    log.info(f"Fetching data for {projects_data.source_names}")
+    projects_data.get_data()
+    log.info("Data fetched successfully")
+    projects_data.save_data()
+    log.info("Data saved to disk")
+
+    modified_projects = projects_data.get_modified_projects()
+
+    op = daily_read.order_portal.OrderPortal(config_values)
     op.get_orders()
     # TODO - not sure how to proceed, fetching ALL projects in order portal
     # and then generate reports seems quite slow and wasteful, but I haven't

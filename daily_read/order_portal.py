@@ -8,7 +8,6 @@ from urllib.parse import urljoin
 # installed
 import requests
 
-from daily_read import config_values
 from daily_read.utils import StatusdbSession
 
 log = logging.getLogger(__name__)
@@ -17,7 +16,8 @@ log = logging.getLogger(__name__)
 class OrderPortal(object):
     """Class to handle NGI order portal interaction"""
 
-    def __init__(self):
+    def __init__(self, config_values):
+        self.config_values = config_values
         base_url = config_values.ORDER_PORTAL_URL
         api_key = config_values.ORDER_PORTAL_API_KEY
 
@@ -69,7 +69,7 @@ class OrderPortal(object):
         order_updates = {}
         pull_date = datetime.datetime.now()
         older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
-        statusdb_sess = StatusdbSession(config_values, db="projects")
+        statusdb_sess = StatusdbSession(self.config_values, db="projects")
         for order in self.all_orders:
             process_order = True
             if use_node:
