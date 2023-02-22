@@ -56,7 +56,7 @@ class ProjectDataMaster(object):
 
 
 class StockholmProjectData(object):
-    """NGIProjectData subclass for NGI Stockholm data"""
+    """Data class for fetching NGI Stockholm data"""
 
     def __init__(self, config):
         super().__init__(config)
@@ -68,14 +68,14 @@ class StockholmProjectData(object):
 
 
 class SNPSEQProjectData(object):
-    """NGIProjectData subclass for NGI SNP&SEQ data"""
+    """Data class for fetching NGI SNP&SEQ data"""
 
     def get_data(self, project_id=None):
         pass
 
 
 class UGCProjectData(object):
-    """NGIProjectData subclass for NGI UGC data"""
+    """Data class for fetching NGI UGC data"""
 
     def get_data(self, project_id=None):
         pass
