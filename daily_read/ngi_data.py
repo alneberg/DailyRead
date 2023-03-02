@@ -14,20 +14,22 @@ class ProjectDataMaster(object):
         self.source_names = [source.name for source in sources]
 
         self.data_repo = self.__setup_data_repo()
+        self.data_location = self.config.DATA_LOCATION
 
         self.__data_fetched = False
+        self.__data_saved = False
 
     def __setup_data_repo(self):
         # Safety check of path
-        if not os.path.isabs(data_location):
-            raise ValueError(f"Data location is not an absolute path: {data_location}")
+        if not os.path.isabs(self.data_location):
+            raise ValueError(f"Data location is not an absolute path: {self.data_location}")
 
-        if os.path.exists(data_location) and not os.path.isdir(data_location):
-            raise ValueError(f"Data Location exists but is not a directory: {data_location}")
+        if os.path.exists(self.data_location) and not os.path.isdir(self.data_location):
+            raise ValueError(f"Data Location exists but is not a directory: {self.data_location}")
 
         # This seems to work with both existing git repos, empty directories
         # and non-existing directories
-        data_repo = git.Repo.init(data_location)
+        data_repo = git.Repo.init(self.data_location)
 
         # Make sure there is at least 1 commit (ref HEAD exists)
         try:
@@ -42,10 +44,10 @@ class ProjectDataMaster(object):
                 )
 
             # Create empty file to include in the commit
-            new_file_path = os.path.join(data_location, ".empty")
+            new_file_path = os.path.join(self.data_location, ".empty")
             open(new_file_path, "a").close()
             self.data_repo.index.add([new_file_path])
-            self.index.commit("Added an empty file as a first commit")
+            self.data_repo.index.commit("Empty file as a first commit")
 
         return data_repo
 
@@ -63,29 +65,42 @@ class ProjectDataMaster(object):
         self.__data_fetched = True
 
     def save_data(self):
-        assert self.__data_fetched
-        data_location = self.config.DATA_LOCATION
+        """Saves data to disk, where each project is located in its own file, e.g.:
 
-        if self.data_repo.is_dirty() or self.data_repo.untracked_files:
-            if self.any_modified_projects():
-                log.info("Changes for projects detected prior to fetching data!")
-                for project_id, ngi_node in self.get_modified_or_new_projects():
-                    log.info(f"{project_id} from {ngi_node} had changes not yet reported.")
+        DATA_LOCATION/ngi_stockholm/2023/NGI09442.json
+
+        """
+        assert self.__data_fetched
+
+        if self.any_modified_projects():
+            log.info("Changes for projects detected from previous run!")
+            for project_record in self.get_modified_or_new_projects():
+                log.info(f"{project_record.project_id} from {project_record.ngi_node} had changes not yet reported.")
 
         for source in self.sources:
-            source_dir = os.path.join(data_location, source.dirname)
-            if not os.path.exists(source_dir):
-                os.mkdir(source_dir)
-            if not os.path.isdir(source_dir):
-                raise ValueError(
-                    f"Failed to use data directory {source_dir} for download, path exists but is not a directory."
-                )
+            source_dir = os.path.join(self.data_location, source.dirname)
+
             # Save individual projects to json files
-            for project_id, project_data in source.data.items():
-                file_name = os.path.join(source_dir, project_id + ".json")
-                with open(file_name, mode="w") as fh:
-                    log.debug(f"Writing data for {project_id} to {file_name}")
-                    fh.write(json.dumps(project_data))
+            for project_record in source.data.items():
+                year_dir = os.path.join(source_dir, project_record.year)
+
+                # Safety check on directory
+                os.mkdirs(year_dir, exists_ok=True)
+
+                if not os.path.isdir(year_dir):
+                    raise ValueError(
+                        f"Failed to use data directory {year_dir} for download, path exists but is not a directory."
+                    )
+
+                abs_path = os.path.join(self.data_location, project_record.relative_path)
+                if os.path.dirname(abs_path) != year_dir:
+                    raise ValueError(f"Error with paths, dirname of {abs_path} should be {year_dir}")
+
+                with open(abs_path, mode="w") as fh:
+                    log.debug(f"Writing data for {project_record.project_id} to {project_record.file_path}")
+                    fh.write(json.dumps(project_record.data))
+
+        self.__data_saved = True
 
     def any_modified_or_new(self):
         """Checks if there are modified or new projects and returns True or False.
@@ -96,26 +111,69 @@ class ProjectDataMaster(object):
          - Untracked files
 
         """
-
         return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.data_repo.diff("HEAD")])
 
     def get_modified_or_new_projects(self):
-        """Need to return files which are either:
+        """Returns files which are either:
         - Modified and staged
         - Modified but not staged
         - Untracked files
         """
 
-        if self.data_repo.is_dirty() or self.data_repo.untracked_files:
-            pass  # Might be tricky to find added files? At least when there's no commit already?
+        projects = set()
+        if not self.any_modified_or_new():
+            return []
 
-        return [("orderportal_id2", "STHLM"), ("orderportal_id3", "STHLM")]
+        # Modified and staged files
+        projects.update(self.data_repo.index.diff("HEAD"))
 
-    def stage_data_for_project(self, project_id):
-        pass
+        # Modifed and not staged files
+        projects.update(self.data_repo.index.diff(None))
+
+        # Modified untracked files
+        projects.update(self.data_repo.untracked_files)
+
+        projects_list = []
+        for project_path in projects:
+            project = ProjectDataRecord(project_path)
+            projects_list.append(project)
+
+        return projects_list
+
+    def stage_data_for_project(self, project_record):
+        self.data_repo.index.add([project_record.file_name])
 
     def commit_staged_data(self, message):
-        pass
+        self.data_repo.index.commit("Empty file as a first commit")
+
+
+class ProjectDataRecord(object):
+    """Class to represent a single project
+
+    Raises ValueError if orderer is not present in data, if data is given
+    """
+
+    def __init__(self, relative_path, data=None):
+        node_year, file_name = os.path.split(relative_path)
+        node, year = os.path.split(node_year)
+        # Removes the last extension, we'll assume we only have one (.json)
+        project_id = os.path.splitext(file_name)[0]
+
+        self.ngi_node = node
+        self.year = year
+        self.file_name = file_name
+        self.relative_path = relative_path
+        self.project_id = project_id
+
+        self.orderer = None
+        self.data = None
+
+        if data is not None:
+            if "orderer" not in data:
+                raise ValueError(f"Orderer missing for project_id: {project_id}, NGI node: {node}")
+            self.orderer = data["orderer"]
+
+            self.data = data
 
 
 class StockholmProjectData(object):
