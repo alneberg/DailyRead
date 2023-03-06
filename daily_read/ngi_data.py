@@ -8,16 +8,24 @@ log = logging.getLogger(__name__)
 
 
 class ProjectDataMaster(object):
-    def __init__(self, config, sources):
+    def __init__(self, config):
         self.config = config
+        sources = []
+        if config.FETCH_FROM_NGIS:
+            sources.append(StockholmProjectData(config))
+        if config.FETCH_FROM_SNPSEQ:
+            sources.append(SNPSEQProjectData(config))
+        if config.FETCH_FROM_UGC:
+            sources.append(UGCProjectData(config))
+
         self.sources = sources
         self.source_names = [source.name for source in sources]
 
-        self.data_repo = self.__setup_data_repo()
         self.data_location = self.config.DATA_LOCATION
+        self.data_repo = self.__setup_data_repo()
 
-        self.__data_fetched = False
-        self.__data_saved = False
+        self._data_fetched = False
+        self._data_saved = False
 
     def __setup_data_repo(self):
         # Safety check of path
@@ -33,11 +41,11 @@ class ProjectDataMaster(object):
 
         # Make sure there is at least 1 commit (ref HEAD exists)
         try:
-            self.data_repo.index.diff("HEAD")
+            data_repo.index.diff("HEAD")
         except gitdb.exc.BadName as e:
             # No commit exists yet
             # Make sure no files are staged to be commited
-            if any([self.data_repo.is_dirty(), self.data_repo.untracked_files]):
+            if any([data_repo.is_dirty(), data_repo.untracked_files]):
                 raise ValueError(
                     f"Data location has no commits but has modifications, "
                     "please commit those or use an empty directory as the data location"
@@ -46,8 +54,8 @@ class ProjectDataMaster(object):
             # Create empty file to include in the commit
             new_file_path = os.path.join(self.data_location, ".empty")
             open(new_file_path, "a").close()
-            self.data_repo.index.add([new_file_path])
-            self.data_repo.index.commit("Empty file as a first commit")
+            data_repo.index.add([new_file_path])
+            data_repo.index.commit("Empty file as a first commit")
 
         return data_repo
 
@@ -62,7 +70,7 @@ class ProjectDataMaster(object):
                 log.exception(e)
                 raise
 
-        self.__data_fetched = True
+        self._data_fetched = True
 
     def save_data(self):
         """Saves data to disk, where each project is located in its own file, e.g.:
@@ -70,7 +78,7 @@ class ProjectDataMaster(object):
         DATA_LOCATION/ngi_stockholm/2023/NGI09442.json
 
         """
-        assert self.__data_fetched
+        assert self._data_fetched
 
         if self.any_modified_projects():
             log.info("Changes for projects detected from previous run!")
@@ -100,7 +108,7 @@ class ProjectDataMaster(object):
                     log.debug(f"Writing data for {project_record.project_id} to {project_record.file_path}")
                     fh.write(json.dumps(project_record.data))
 
-        self.__data_saved = True
+        self._data_saved = True
 
     def any_modified_or_new(self):
         """Checks if there are modified or new projects and returns True or False.
@@ -111,7 +119,7 @@ class ProjectDataMaster(object):
          - Untracked files
 
         """
-        return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.data_repo.diff("HEAD")])
+        return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.data_repo.index.diff("HEAD")])
 
     def get_modified_or_new_projects(self):
         """Returns files which are either:
@@ -144,7 +152,7 @@ class ProjectDataMaster(object):
         self.data_repo.index.add([project_record.file_name])
 
     def commit_staged_data(self, message):
-        self.data_repo.index.commit("Empty file as a first commit")
+        self.data_repo.index.commit(message)
 
 
 class ProjectDataRecord(object):
@@ -180,9 +188,8 @@ class StockholmProjectData(object):
     """Data class for fetching NGI Stockholm data"""
 
     def __init__(self, config):
-        super().__init__(config)
         self.name = "NGI Stockholm"
-        self.dirname = "ngi_stockholm"
+        self.dirname = "NGIS"
 
     def get_data(self, project_id=None):
         pass
@@ -191,12 +198,20 @@ class StockholmProjectData(object):
 class SNPSEQProjectData(object):
     """Data class for fetching NGI SNP&SEQ data"""
 
+    def __init__(self, config):
+        self.name = "SNP&SEQ"
+        self.dirname = "SNPSEQ"
+
     def get_data(self, project_id=None):
         pass
 
 
 class UGCProjectData(object):
     """Data class for fetching NGI UGC data"""
+
+    def __init__(self, config):
+        self.name = "Uppsala Genome Center"
+        self.dirname = "UGC"
 
     def get_data(self, project_id=None):
         pass

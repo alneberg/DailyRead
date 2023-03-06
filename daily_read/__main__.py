@@ -7,12 +7,16 @@ import sys
 
 # Installed
 import click
+import dotenv
 from rich.logging import RichHandler
 
 # Own
 import daily_read.order_portal
 import daily_read.daily_report
 import daily_read.ngi_data
+
+
+dotenv.load_dotenv()
 
 from daily_read import config_values
 
@@ -49,15 +53,7 @@ def generate():
 @generate.command(name="all")
 def generate_all():
     # Fetch data from all sources (configurable)
-    sources = []
-    if config_values.FETCH_FROM_NGIS:
-        sources.append(daily_read.ngi_data.StockholmProjectData(config_values))
-    if config_values.FETCH_FROM_SNPSEQ:
-        sources.append(daily_read.ngi_data.SNPSEQProjectData(config_values))
-    if config_values.FETCH_FROM_UGC:
-        sources.append(daily_read.ngi_data.UGCProjectData(config_values))
-
-    projects_data = daily_read.ngi_data.ProjectDataMaster(config_values, sources)
+    projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
 
     log.info(f"Fetching data for {projects_data.source_names}")
     projects_data.get_data()
