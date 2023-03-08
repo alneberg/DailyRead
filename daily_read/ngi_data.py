@@ -44,7 +44,7 @@ class ProjectDataMaster(object):
             data_repo.index.diff("HEAD")
         except gitdb.exc.BadName as e:
             # No commit exists yet
-            # Make sure no files are staged to be commited
+            # Make sure no files are staged to be committed
             if any([data_repo.is_dirty(), data_repo.untracked_files]):
                 raise ValueError(
                     f"Data location has no commits but has modifications, "
@@ -58,6 +58,15 @@ class ProjectDataMaster(object):
             data_repo.index.commit("Empty file as a first commit")
 
         return data_repo
+
+    @property
+    def staged_files(self):
+        return [diff.b_path for diff in self.data_repo.index.diff("HEAD")]
+
+    @property
+    def modified_not_staged_files(self):
+        """Modifed and not staged files"""
+        return [diff.b_path for diff in self.data_repo.index.diff(None)]
 
     def get_data(self):
         """Downloads data for each source into memory"""
@@ -119,7 +128,7 @@ class ProjectDataMaster(object):
          - Untracked files
 
         """
-        return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.data_repo.index.diff("HEAD")])
+        return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.staged_files])
 
     def get_modified_or_new_projects(self):
         """Returns files which are either:
@@ -127,16 +136,15 @@ class ProjectDataMaster(object):
         - Modified but not staged
         - Untracked files
         """
-
         projects = set()
         if not self.any_modified_or_new():
             return []
 
         # Modified and staged files
-        projects.update(self.data_repo.index.diff("HEAD"))
+        projects.update(self.staged_files)
 
         # Modifed and not staged files
-        projects.update(self.data_repo.index.diff(None))
+        projects.update(self.modified_not_staged_files)
 
         # Modified untracked files
         projects.update(self.data_repo.untracked_files)
