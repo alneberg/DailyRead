@@ -152,29 +152,93 @@ def test_create_project_data_master_no_commit(data_repo_no_commit):
     assert data_master.data_repo.commit().message == "Empty file as a first commit"
 
 
-def test_any_modified_or_new(data_repo_full):
-    """With existing git repo containing all kind of modifications, test detection of modifications"""
+def test_modified_or_new_no_commit(data_repo_no_commit):
+    config_values = config.Config()
+    data_master = ngi_data.ProjectDataMaster(config_values)
+
+    assert not data_master.any_modified_or_new()
+
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 0
+
+
+def test_modified_or_new(data_repo_full):
     config_values = config.Config()
     data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 8
 
-def test_any_modified_or_new_untracked(data_repo_untracked):
-    """With existing git repo containing all kind of modifications, test detection of modifications"""
+
+def test_modified_or_new_untracked(data_repo_untracked):
     config_values = config.Config()
     data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 2
 
-# Test that it finds modified/new/ files
+    assert "untracked_file" in file_names[0]
 
-# get_modified_or_new_projects
-# Check that it picks up everything
-# Edge cases:
-# No changes
-# Multiple files for all three types of changes
+
+def test_modified_or_new_staged(data_repo_new_staged):
+    config_values = config.Config()
+    data_master = ngi_data.ProjectDataMaster(config_values)
+
+    assert data_master.any_modified_or_new()
+
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 2
+
+    assert "staged_file" in file_names[0]
+
+
+def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
+    config_values = config.Config()
+    data_master = ngi_data.ProjectDataMaster(config_values)
+
+    assert data_master.any_modified_or_new()
+
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 2
+
+    assert "modified_file" in file_names[0]
+
+
+def test_modified_or_new_modified_staged(data_repo_modified_staged):
+    config_values = config.Config()
+    data_master = ngi_data.ProjectDataMaster(config_values)
+
+    assert data_master.any_modified_or_new()
+
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+    assert len(set(file_names)) == 2
+
+    assert "modified_staged_file" in file_names[0]
+
+
+def test_modified_or_new_tracked(data_repo_tracked):
+    config_values = config.Config()
+    data_master = ngi_data.ProjectDataMaster(config_values)
+
+    assert not data_master.any_modified_or_new()
+
+    modified_or_new = data_master.get_modified_or_new_projects()
+    file_names = [project.relative_path for project in modified_or_new]
+
+    assert len(set(file_names)) == 0
+
+
+# Planned tests #
 
 
 def test_getting_data():
@@ -187,6 +251,7 @@ def test_getting_data():
     FETCH_FROM_NGIS = os.getenv("DAILY_READ_FETCH_FROM_NGIS")
     FETCH_FROM_SNPSEQ = os.getenv("DAILY_READ_FETCH_FROM_SNPSEQ")
     FETCH_FROM_UGC = os.getenv("DAILY_READ_FETCH_FROM_UGC")
+    pass
 
 
 # Test saving data
