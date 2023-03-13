@@ -8,8 +8,6 @@ from urllib.parse import urljoin
 # installed
 import requests
 
-from daily_read.utils import StatusdbSession
-
 log = logging.getLogger(__name__)
 
 
