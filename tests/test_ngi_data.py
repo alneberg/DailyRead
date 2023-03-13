@@ -1,9 +1,12 @@
 import os
 
+import dotenv
 import git
 import pytest
 
 from daily_read import ngi_data, config
+
+dotenv.load_dotenv()
 
 
 def _create_all_files(file_list, data_location):

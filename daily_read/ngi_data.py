@@ -1,8 +1,13 @@
-import git
-import gitdb
+import datetime
 import json
 import logging
 import os
+
+from dateutil.relativedelta import relativedelta
+import git
+import gitdb
+
+from daily_read import statusdb
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +31,8 @@ class ProjectDataMaster(object):
 
         self._data_fetched = False
         self._data_saved = False
+
+        self.data = {}
 
     def __setup_data_repo(self):
         # Safety check of path
@@ -73,7 +80,7 @@ class ProjectDataMaster(object):
 
         for source in self.sources:
             try:
-                source.get_data()
+                self.data.update(source.get_data())
             except Exception as e:
                 log.error(f"Failed to fetch data from {source.name}")
                 log.exception(e)
@@ -89,33 +96,30 @@ class ProjectDataMaster(object):
         """
         assert self._data_fetched
 
-        if self.any_modified_projects():
+        if self.any_modified_or_new():
             log.info("Changes for projects detected from previous run!")
             for project_record in self.get_modified_or_new_projects():
                 log.info(f"{project_record.project_id} from {project_record.ngi_node} had changes not yet reported.")
 
-        for source in self.sources:
-            source_dir = os.path.join(self.data_location, source.dirname)
+        for portal_id, project_record in self.data.items():
+            source_year_dir = os.path.join(self.data_location, project_record.relative_dirpath)
 
             # Save individual projects to json files
-            for project_record in source.data.items():
-                year_dir = os.path.join(source_dir, project_record.year)
+            # Safety check on directory
+            os.makedirs(source_year_dir, exist_ok=True)
 
-                # Safety check on directory
-                os.mkdirs(year_dir, exists_ok=True)
+            if not os.path.isdir(source_year_dir):
+                raise ValueError(
+                    f"Failed to use data directory {source_year_dir} for download, path exists but is not a directory."
+                )
 
-                if not os.path.isdir(year_dir):
-                    raise ValueError(
-                        f"Failed to use data directory {year_dir} for download, path exists but is not a directory."
-                    )
+            abs_path = os.path.join(self.data_location, project_record.relative_path)
+            if os.path.dirname(abs_path) != source_year_dir:  # This should really never happen
+                raise ValueError(f"Error with paths, dirname of {abs_path} should be {year_dir}")
 
-                abs_path = os.path.join(self.data_location, project_record.relative_path)
-                if os.path.dirname(abs_path) != year_dir:
-                    raise ValueError(f"Error with paths, dirname of {abs_path} should be {year_dir}")
-
-                with open(abs_path, mode="w") as fh:
-                    log.debug(f"Writing data for {project_record.project_id} to {project_record.file_path}")
-                    fh.write(json.dumps(project_record.data))
+            with open(abs_path, mode="w") as fh:
+                log.debug(f"Writing data for {project_record.project_id} to {abs_path}")
+                fh.write(json.dumps(project_record.data))
 
         self._data_saved = True
 
@@ -143,7 +147,7 @@ class ProjectDataMaster(object):
         # Modified and staged files
         projects.update(self.staged_files)
 
-        # Modifed and not staged files
+        # Modified and not staged files
         projects.update(self.modified_not_staged_files)
 
         # Modified untracked files
@@ -151,10 +155,22 @@ class ProjectDataMaster(object):
 
         projects_list = []
         for project_path in projects:
-            project = ProjectDataRecord(project_path)
-            projects_list.append(project)
+            portal_id = ProjectDataRecord.portal_id_from_path(project_path)
+            if portal_id in self.data:
+                project_record = self.data[portal_id]
+            else:
+                project_record = ProjectDataRecord(project_path)
+            projects_list.append(project_record)
 
         return projects_list
+
+    def find_unique_orderers(self):
+        projects_list = self.get_modified_or_new_projects()
+        orderers = set()
+        for project in projects_list:
+            orderers.add(project.orderer)
+
+        return orderers
 
     def stage_data_for_project(self, project_record):
         self.data_repo.index.add([project_record.file_name])
@@ -170,6 +186,7 @@ class ProjectDataRecord(object):
     """
 
     def __init__(self, relative_path, data=None):
+        """relative_path: e.g. "NGIS/2023/NGI0002313.json" """
         node_year, file_name = os.path.split(relative_path)
         node, year = os.path.split(node_year)
         # Removes the last extension, we'll assume we only have one (.json)
@@ -179,6 +196,7 @@ class ProjectDataRecord(object):
         self.year = year
         self.file_name = file_name
         self.relative_path = relative_path
+        self.relative_dirpath = node_year
         self.project_id = project_id
 
         self.orderer = None
@@ -187,9 +205,19 @@ class ProjectDataRecord(object):
         if data is not None:
             if "orderer" not in data:
                 raise ValueError(f"Orderer missing for project_id: {project_id}, NGI node: {node}")
+
             self.orderer = data["orderer"]
 
             self.data = data
+        else:
+            # TODO read from json file here.
+            pass
+
+    def portal_id_from_path(path):
+        """Class method to parse out project portal id (e.g. filename without extension) from given path"""
+        _, file_name = os.path.split(path)
+        portal_id = os.path.splitext(file_name)[0]
+        return portal_id
 
 
 class StockholmProjectData(object):
@@ -198,9 +226,20 @@ class StockholmProjectData(object):
     def __init__(self, config):
         self.name = "NGI Stockholm"
         self.dirname = "NGIS"
+        self.statusdb_session = statusdb.StatusDBSession(config)
 
     def get_data(self, project_id=None):
-        pass
+        self.data = {}
+        if project_id is not None:
+            self.get_entry(project_id)
+        else:
+            close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
+            for row in self.statusdb_session.rows(close_date=close_date):
+                order_year = "2023"  # TODO - get order year from data
+                portal_id = row.value["portal_id"]
+                relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
+                self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
+        return self.data
 
 
 class SNPSEQProjectData(object):

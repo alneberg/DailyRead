@@ -11,14 +11,14 @@ import dotenv
 from rich.logging import RichHandler
 
 # Own
-import daily_read.order_portal
+import daily_read.config
 import daily_read.daily_report
 import daily_read.ngi_data
+import daily_read.order_portal
 
 
 dotenv.load_dotenv()
-
-from daily_read import config_values
+config_values = daily_read.config.Config()
 
 
 logging.basicConfig(
@@ -61,9 +61,9 @@ def generate_all():
     projects_data.save_data()
     log.info("Data saved to disk")
 
-    modified_projects = projects_data.get_modified_projects()
+    orderer_with_modified_projects = projects_data.find_unique_orderers()
 
-    op = daily_read.order_portal.OrderPortal(config_values)
+    op = daily_read.order_portal.OrderPortal(config_values, projects_data=projects_data)
     op.get_orders()
     # TODO - not sure how to proceed, fetching ALL projects in order portal
     # and then generate reports seems quite slow and wasteful, but I haven't
