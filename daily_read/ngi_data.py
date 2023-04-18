@@ -198,6 +198,7 @@ class ProjectDataRecord(object):
         self.relative_path = relative_path
         self.relative_dirpath = node_year
         self.project_id = project_id
+        self.report_iuid = None
 
         self.orderer = None
         self.data = None
