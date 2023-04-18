@@ -77,7 +77,7 @@ class OrderPortal(object):
                 proj_info = self.projects_data.data[order["identifier"]]
                 if order["reports"]:
                     proj_prog_rep = next(item for item in order["reports"] if item["name"] == "Project Progress")
-                    proj_info.report_iuid = proj_prog_rep['iuid']
+                    proj_info.report_iuid = proj_prog_rep["iuid"]
                 if proj_info.orderer in order_updates:
                     order_updates[proj_info.orderer]["projects"].append(proj_info)
                 else:
@@ -94,12 +94,16 @@ class OrderPortal(object):
         if project.report_iuid:
             add_to_url = f"/{project.report_iuid}"
         url = f"{self.base_url}/api/v1/report{add_to_url}"
-        indata =  dict(order=project.project_id},
-                        name="Project Progress",
-                        status="published",
-                        file=dict(data=base64.b64encode(report.encode()).decode("utf-8"),
-                                    filename="project_progress.html",
-                                    content_type="text/html"))
+        indata = dict(
+            order=project.project_id,
+            name="Project Progress",
+            status="published",
+            file=dict(
+                data=base64.b64encode(report.encode()).decode("utf-8"),
+                filename="project_progress.html",
+                content_type="text/html",
+            ),
+        )
         # TODO: check Encoded to utf-8 to display special characters properly
         response = requests.post(url, headers=self.headers, json=indata)
 

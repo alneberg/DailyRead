@@ -65,7 +65,7 @@ def generate_all():
 
     op = daily_read.order_portal.OrderPortal(config_values, projects_data=projects_data)
     for orderer in orderer_with_modified_projects:
-       if orderer:
+        if orderer:
             op.get_orders(orderer=orderer)
     # TODO - not sure how to proceed, fetching ALL projects in order portal
     # and then generate reports seems quite slow and wasteful, but I haven't
