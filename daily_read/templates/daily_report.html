@@ -111,9 +111,11 @@
       </div>
 
       <div id="projects_list">
-        {% set priority = {1:['all_raw_data_delivered', 'All Raw Data delivered'], 2: ['all_samples_sequenced', 'All
-        Samples sequenced'], 3: ['qc_library_finished', 'Library QC finished'], 4: ['queued', 'Reception Control
-        finished'], 5: ['samples_received', 'Samples received']} %}
+        {%
+          set priority = {1:['all_raw_data_delivered', 'All Raw Data delivered'], 2: ['all_samples_sequenced', 'All
+          Samples sequenced'], 3: ['qc_library_finished', 'Library QC finished'], 4: ['queued', 'Reception Control
+          finished'], 5: ['samples_received', 'Samples received']}
+        %}
         {% for project in data['projects'] %}
           <div class="panel panel-default">
             <div class="panel-heading">
