@@ -67,12 +67,7 @@ def generate_all():
     for orderer in orderer_with_modified_projects:
         if orderer:
             op.get_orders(orderer=orderer)
-    # TODO - not sure how to proceed, fetching ALL projects in order portal
-    # and then generate reports seems quite slow and wasteful, but I haven't
-    # tried so it might work. Maybe a pull model where we only generate reports
-    # for projects that we know have been updated can be a better alternative?
     modified_orders = op.process_orders()
-    # TODO: Should clean up...
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner in modified_orders:
