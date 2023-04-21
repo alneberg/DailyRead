@@ -24,11 +24,9 @@ class StatusDBSession(object):
         self.db_connection = self.connection["projects"]
 
         self.projdates_view = self.db_connection.view(
-            "project/dailyread",
+            "project/dailyread_dates",
         )
 
     def rows(self, close_date=None):
-        view = self.db_connection.view(
-            "project/dailyread", descending=True, endkey=[close_date, "ZZZZ"], reduce=True, group_level=2, group=True
-        )
+        view = self.db_connection.view("project/dailyread_dates", descending=True, endkey=[close_date, "ZZZZ"])
         return view.rows

@@ -64,22 +64,16 @@ def generate_all():
     orderer_with_modified_projects = projects_data.find_unique_orderers()
 
     op = daily_read.order_portal.OrderPortal(config_values, projects_data=projects_data)
-    op.get_orders()
-    # TODO - not sure how to proceed, fetching ALL projects in order portal
-    # and then generate reports seems quite slow and wasteful, but I haven't
-    # tried so it might work. Maybe a pull model where we only generate reports
-    # for projects that we know have been updated can be a better alternative?
-    all_sthlm_orders = op.process_orders(use_node="Stockholm")
-    # TODO: Should clean up...
-    daily_rep = daily_read.daily_report.DailyReport(config_values.REPORTS_LOCATION)
+    for orderer in orderer_with_modified_projects:
+        if orderer:
+            op.get_orders(orderer=orderer)
+    modified_orders = op.process_orders()
+    daily_rep = daily_read.daily_report.DailyReport()
 
-    for owner in all_sthlm_orders:
-        report = daily_rep.populate_and_write_report(owner, all_sthlm_orders[owner])
-        for project in all_sthlm_orders[owner]["projects"]:
-            op.upload_report_to_order_portal(report, project["iuid"])
-
-        for project in all_sthlm_orders[owner]["projects"]:
-            op.upload_report_to_order_portal(report, project["iuid"])
+    for owner in modified_orders:
+        report = daily_rep.populate_and_write_report(owner, modified_orders[owner])
+        for project in modified_orders[owner]["projects"]:
+            op.upload_report_to_order_portal(report, project)
 
 
 @generate.command(name="single")

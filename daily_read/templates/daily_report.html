@@ -111,23 +111,25 @@
       </div>
 
       <div id="projects_list">
-        {% set priority = {1:['all_raw_data_delivered', 'All Raw Data delivered'], 2: ['all_samples_sequenced', 'All
-        Samples sequenced'], 3: ['qc_library_finished', 'Library QC finished'], 4: ['queued', 'Reception Control
-        finished'], 5: ['samples_received', 'Samples received']} %}
+        {%
+          set priority = {1:['all_raw_data_delivered', 'All Raw Data delivered'], 2: ['all_samples_sequenced', 'All
+          Samples sequenced'], 3: ['qc_library_finished', 'Library QC finished'], 4: ['queued', 'Reception Control
+          finished'], 5: ['samples_received', 'Samples received']}
+        %}
         {% for project in data['projects'] %}
           <div class="panel panel-default">
             <div class="panel-heading">
-              <a data-toggle="collapse" href="#panel_project_{{ project['project_id'] }}">
+              <a data-toggle="collapse" href="#panel_project_{{ project.project_id }}">
                 <div class="row">
                   <div class="col-md-9">
-                    <h2 class="panel-title">{{ project['project_name'] }} <span class="caret"></span></h2>
+                    <h2 class="panel-title">{{ project.data['project_name'] }} <span class="caret"></span></h2>
                   </div>
                   <!-- What should last updated be? -->
                   <div class="col-md-3 text-right">Last updated: {{ data['pull_date'] }}</div>
                 </div>
               </a>
             </div>
-            <div class="panel-body collapse" id="panel_project_{{ project['project_id'] }}">
+            <div class="panel-body collapse" id="panel_project_{{ project.project_id }}">
               <!-- TODO: Rewrite progress bars and make text bigger too-->
               <div class="progress">
                 <div
@@ -194,11 +196,11 @@
               {% set vars = {'h2_set': false } %}
               {# TODO: try sorting the dict #}
               {% for date_prio in priority %}
-                {% if priority[date_prio][0] in project['proj_dates'] and not vars.h2_set %}
-                  <h2>{{ priority[date_prio][1] }} - {{ project['proj_dates'][priority[date_prio][0]] }}</h2>
+                {% if priority[date_prio][0] in project.data['proj_dates'] and not vars.h2_set %}
+                  <h2>{{ priority[date_prio][1] }} - {{ project.data['proj_dates'][priority[date_prio][0]] }}</h2>
                   {% if vars.update({'h2_set': True}) %}{% endif %}
                 {% else %}
-                  <h4>{{ priority[date_prio][1] }} - {{ project['proj_dates'][priority[date_prio][0]] }}</h4>
+                  <h4>{{ priority[date_prio][1] }} - {{ project.data['proj_dates'][priority[date_prio][0]] }}</h4>
                 {% endif %}
               {% endfor %}
             </div>

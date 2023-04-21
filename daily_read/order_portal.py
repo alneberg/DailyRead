@@ -1,6 +1,7 @@
 """Module to handle order portal interaction"""
 
 # Standard
+import base64
 import datetime
 import logging
 from urllib.parse import urljoin
@@ -14,7 +15,7 @@ log = logging.getLogger(__name__)
 class OrderPortal(object):
     """Class to handle NGI order portal interaction"""
 
-    def __init__(self, config_values):
+    def __init__(self, config_values, projects_data):
         self.config_values = config_values
         base_url = config_values.ORDER_PORTAL_URL
         api_key = config_values.ORDER_PORTAL_API_KEY
@@ -27,9 +28,10 @@ class OrderPortal(object):
 
         self.base_url = base_url
         self.headers = {"X-OrderPortal-API-key": api_key}
-        self.all_orders = None
+        self.projects_data = projects_data
+        self.all_orders = []
 
-    def __get(self, url, params):
+    def _get(self, url, params):
         full_url = urljoin(self.base_url, url)
 
         return requests.get(full_url, headers=self.headers, params=params)
@@ -42,69 +44,69 @@ class OrderPortal(object):
             params["assigned_node"] = node
         if status:
             params["status"] = status
-        if orderer is None:
+        if not recent:
             # Fetch all orders
-            year = "all"
-            if recent:
-                year = "recent"
-            params["year"] = year
-            response = self.__get("/api/v1/orders", params)
-        else:
-            response = self.__get(f"/api/v1/account/{orderer}/orders", params)
+            params["year"] = "all"
+        if orderer:
+            params["owner"] = orderer
+
+        response = self._get("api/v1/orders", params)
 
         try:
-            self.all_orders = response.json()["orders"]
+            self.all_orders = self.all_orders + response.json()["items"]
         except requests.exceptions.JSONDecodeError as e:
             log.critical(
                 f"Could not fetch orders for {{node: {node}, status: {status}, orderer={orderer}, recent={recent}}}"
             )
             raise
-        log.info(f"Fetched {len(self.all_orders)} order(s) from the Order Portal")
+        log.info(f"Fetched a total of {len(self.all_orders)} order(s) from the Order Portal")
 
-    def process_orders(self, use_node="", closed_before_in_days=7):
-        """process orders"""
+    def process_orders(self, closed_before_in_days=30):
+        """Process orderers orders to select ones that need to be updated"""
 
         order_updates = {}
         pull_date = datetime.datetime.now()
         older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
-        statusdb_sess = StatusdbSession(self.config_values, db="projects")
         for order in self.all_orders:
-            process_order = True
-            if use_node:
-                process_order = order.get("fields", {}).get("assigned_node", "") == use_node
-
-            if process_order:
-                if (
-                    order["status"] == "closed"
-                    and datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date() >= older_than_cutoff
-                ):
-                    continue
-                proj_info = statusdb_sess.get_entry(order["identifier"])
-                if proj_info:
-                    proj_info[order["identifier"]]["pull_date"] = f"{pull_date}"
-                    proj_info[order["identifier"]]["iuid"] = order["iuid"]
-                    pi_email = order["owner"]["email"]
-                    if pi_email in order_updates:
-                        order_updates[pi_email]["projects"].append(proj_info[order["identifier"]])
-                    else:
-                        order_updates[pi_email] = {
-                            "pull_date": f"{pull_date}",
-                            "projects": [proj_info[order["identifier"]]],
-                        }
+            if (
+                order["status"] == "closed"
+                and datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date() >= older_than_cutoff
+            ):
+                continue
+            if order["identifier"] in self.projects_data.data.keys():
+                proj_info = self.projects_data.data[order["identifier"]]
+                if order["reports"]:
+                    proj_prog_rep = next(item for item in order["reports"] if item["name"] == "Project Progress")
+                    proj_info.report_iuid = proj_prog_rep["iuid"]
+                if proj_info.orderer in order_updates:
+                    order_updates[proj_info.orderer]["projects"].append(proj_info)
+                else:
+                    order_updates[proj_info.orderer] = {
+                        "pull_date": f"{pull_date}",
+                        "projects": [proj_info],
+                    }
 
         return order_updates
 
-    def upload_report_to_order_portal(self, report, order_iuid):
+    def upload_report_to_order_portal(self, report, project):
         """Upload report to order portal"""
-
-        url = f"{self.base_url}/api/v1/order/{order_iuid}/report"
-        headers = {
-            "X-OrderPortal-API-key": self.headers["X-OrderPortal-API-key"],
-            "content-type": "text/html",
-        }
-        # Encoded to utf-8 to display special characters properly
-        response = requests.put(url, headers=headers, data=report.encode("utf-8"))
+        add_to_url = ""
+        if project.report_iuid:
+            add_to_url = f"/{project.report_iuid}"
+        url = f"{self.base_url}/api/v1/report{add_to_url}"
+        indata = dict(
+            order=project.project_id,
+            name="Project Progress",
+            status="published",
+            file=dict(
+                data=base64.b64encode(report.encode()).decode("utf-8"),
+                filename="project_progress.html",
+                content_type="text/html",
+            ),
+        )
+        # TODO: check Encoded to utf-8 to display special characters properly
+        response = requests.post(url, headers=self.headers, json=indata)
 
         assert response.status_code == 200, (response.status_code, response.reason)
 
-        log.info(f"Updated report for order with iuid: {order_iuid}")
+        log.info(f"Updated report for order with project id: {project.project_id}")
