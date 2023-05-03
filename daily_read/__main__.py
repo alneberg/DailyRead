@@ -35,14 +35,6 @@ def daily_read_cli():
     pass
 
 
-def daily_read_safe_cli():
-    try:
-        daily_read_cli()
-    except Exception as e:
-        log.error(e)
-        sys.exit(1)
-
-
 ### GENERATE ###
 @daily_read_cli.group()
 def generate():
