@@ -75,12 +75,14 @@ class ProjectDataMaster(object):
         """Modifed and not staged files"""
         return [diff.b_path for diff in self.data_repo.index.diff(None)]
 
-    def get_data(self):
+    def get_data(self, project_id=None, source_name=None, close_date=None):
         """Downloads data for each source into memory"""
 
         for source in self.sources:
+            if source_name is not None and source.name != source_name:
+                continue
             try:
-                self.data.update(source.get_data())
+                self.data.update(source.get_data(project_id=project_id, close_date=close_date))
             except Exception as e:
                 log.error(f"Failed to fetch data from {source.name}")
                 log.exception(e)
@@ -229,18 +231,37 @@ class StockholmProjectData(object):
         self.dirname = "NGIS"
         self.statusdb_session = statusdb.StatusDBSession(config)
 
-    def get_data(self, project_id=None):
+    def get_data(self, project_id=None, close_date=None):
+        """Fetch data from Stockholm StatusDB.
+
+        If close_date is not given, defaults to 6 months ago.
+        Close date should be a relative delta.
+        """
         self.data = {}
         if project_id is not None:
             self.get_entry(project_id)
         else:
-            close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
+            if close_date is None:
+                close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
             for row in self.statusdb_session.rows(close_date=close_date):
                 order_year = "2023"  # TODO - get order year from data
                 portal_id = row.value["portal_id"]
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
                 self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
         return self.data
+
+    def get_entry(self, project_id):
+        """Fetches data for a single project from statusdb"""
+        close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
+        rows = self.statusdb_session.rows(close_date=close_date)
+        for row in rows:
+            if row.value["portal_id"] == project_id:
+                order_year = "2023"  # TODO - get order year from data
+                portal_id = row.value["portal_id"]
+                relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
+                self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
+                return
+        raise ValueError(f"Project {project_id} not found in statusdb")
 
 
 class SNPSEQProjectData(object):

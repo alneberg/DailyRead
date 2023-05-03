@@ -2,11 +2,13 @@
 """The Daily Read, a utility to generate and upload automatic progress reports for NGI Sweden."""
 
 # Standard
+import datetime
 import logging
 import sys
 
 # Installed
 import click
+from dateutil.relativedelta import relativedelta
 import dotenv
 from rich.logging import RichHandler
 
@@ -43,7 +45,8 @@ def generate():
 
 
 @generate.command(name="all")
-def generate_all():
+@click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
+def generate_all(upload=False):
     # Fetch data from all sources (configurable)
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
 
@@ -65,52 +68,57 @@ def generate_all():
     for owner in modified_orders:
         report = daily_rep.populate_and_write_report(owner, modified_orders[owner])
         for project in modified_orders[owner]["projects"]:
-            op.upload_report_to_order_portal(report, project)
-
-
-@generate.command(name="single")
-@click.argument("orderer")
-@click.option(
-    "-l",
-    "--location",
-    type=click.Choice(["Stockholm", "Uppsala"], case_sensitive=False),
-)
-@click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
-# TODO: is it possible to filter on orderer and location together in the API?
-def generate_single(orderer, location, upload):
-    log.info(f"Order portal URL: {config_values.ORDER_PORTAL_URL}")
-    op = daily_read.order_portal.OrderPortal()
-    op.get_orders(orderer=orderer, node=location)
-    orders = op.process_orders(use_node=location)
-    log.info(f"Found {len(orders)} order(s)")
-
-    daily_rep = daily_read.daily_report.DailyReport()
-    for owner in orders:
-        report = daily_rep.populate_and_write_report(owner, orders[owner], config_values.REPORTS_LOCATION)
-        for project in orders[owner]["projects"]:
             if upload:
-                op.upload_report_to_order_portal(report, project["iuid"])
+                op.upload_report_to_order_portal(report, project)
 
 
-### UPLOAD ###
-@daily_read_cli.group()
-def upload():
-    """Upload reports to the order portal"""
-    pass
+@generate.command(
+    name="single", help="Generate a report for a single project and save it locally. Mostly used for development"
+)
+@click.option(
+    "-p",
+    "--project",
+    help="A project id to generate the report for.",
+    type=str,
+)
+@click.option(
+    "-o",
+    "--include-older",
+    help="Include projects that are older than 6 months.",
+    is_flag=True,
+)
+def generate_single(project, include_older=False):
+    projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
+    # Fetch all projects so that the report will look the same
+    log.info("Fetching data from NGI sources")
+    if include_older:
+        close_date = (datetime.datetime.now() - relativedelta(months=120)).strftime("%Y-%m-%d")
+    else:
+        close_date = None
 
+    projects_data.get_data(close_date=close_date)
 
-@upload.command(name="all")
-def upload_all():
-    pass
+    op = daily_read.order_portal.OrderPortal(config_values, projects_data=projects_data)
+    orderer = None
+    for project_id, project_data in projects_data.data.items():
+        if project_id == project:
+            if project_data.orderer is None:
+                log.error(f"Could not find orderer for project {project}")
+                sys.exit(1)
+            orderer = project_data.orderer
+            break
 
+    if orderer is None:
+        log.error(f"Could not find project with id {project}")
+        sys.exit(1)
 
-@upload.command(name="single")
-@click.argument("orderer")
-def upload_single(orderer):
-    pass
+    op.get_orders(orderer=orderer)
+    filtered_orders = op.process_orders()
+    daily_rep = daily_read.daily_report.DailyReport()
 
+    for owner, owner_orders in filtered_orders.items():
+        _ = daily_rep.populate_and_write_report(
+            owner, owner_orders, project_id=project, out_dir=config_values.REPORTS_LOCATION
+        )
 
-@daily_read_cli.command()
-def serve():
-    """Starts a simple web server to display reports"""
-    pass
+    log.info(f"Wrote report to {config_values.REPORTS_LOCATION}")
