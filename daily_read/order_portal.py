@@ -107,7 +107,6 @@ class OrderPortal(object):
                 latest_status = "None"
                 for date_value in proj_info.data["proj_dates"]:
                     date_statuses = proj_info.data["proj_dates"][date_value]
-                    # date_value = proj_info.data["proj_dates"][dates[date_type][0]]
                     # Activity on 5 recent dates
                     recents_keys = sorted(order_updates[proj_info.orderer]["recents"].keys())
                     if len(recents_keys) < 5:
