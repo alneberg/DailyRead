@@ -15,9 +15,9 @@
     },
     "customizations": {
         "vscode": {
-            "extensions": ["esbenp.prettier-vscode"]
+            "extensions": ["esbenp.prettier-vscode", "ms-vscode.live-server"]
         }
-    }
+    },
 
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
@@ -25,6 +25,7 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
 
+    "postCreateCommand": "pip3 install -e ."
     // Configure tool-specific properties.
     // "customizations": {},
 
