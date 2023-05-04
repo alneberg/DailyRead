@@ -32,6 +32,15 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
+STATUS_PRIORITY = {
+    1: "Samples Received",
+    2: "Reception Control finished",
+    3: "Library QC finished",
+    4: "All Samples Sequenced",
+    5: "All Raw data Delivered",
+}
+
+
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 def daily_read_cli():
     pass
@@ -46,7 +55,8 @@ def generate():
 
 @generate.command(name="all")
 @click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
-def generate_all(upload=False):
+@click.option("--develop", is_flag=True, help="Only generate max 5 reports, for dev purposes.")
+def generate_all(upload=False, develop=False):
     # Fetch data from all sources (configurable)
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
 
@@ -59,17 +69,26 @@ def generate_all(upload=False):
     orderer_with_modified_projects = projects_data.find_unique_orderers()
 
     op = daily_read.order_portal.OrderPortal(config_values, projects_data=projects_data)
+    nr_orderers = 0
     for orderer in orderer_with_modified_projects:
         if orderer:
             op.get_orders(orderer=orderer)
+            nr_orderers += 1
+        if nr_orderers > 4 and develop:
+            break
     modified_orders = op.process_orders()
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner in modified_orders:
-        report = daily_rep.populate_and_write_report(owner, modified_orders[owner])
-        for project in modified_orders[owner]["projects"]:
-            if upload:
+        if upload:
+            report = daily_rep.populate_and_write_report(owner, modified_orders[owner], STATUS_PRIORITY)
+            for project in modified_orders[owner]["projects"]:
                 op.upload_report_to_order_portal(report, project)
+        else:
+            log.info("Saving report to disk instead of uploading")
+            report = daily_rep.populate_and_write_report(
+                owner, modified_orders[owner], STATUS_PRIORITY, out_dir=config_values.REPORTS_LOCATION
+            )
 
 
 @generate.command(
@@ -118,7 +137,7 @@ def generate_single(project, include_older=False):
 
     for owner, owner_orders in filtered_orders.items():
         _ = daily_rep.populate_and_write_report(
-            owner, owner_orders, project_id=project, out_dir=config_values.REPORTS_LOCATION
+            owner, owner_orders, STATUS_PRIORITY, out_dir=config_values.REPORTS_LOCATION
         )
 
     log.info(f"Wrote report to {config_values.REPORTS_LOCATION}")

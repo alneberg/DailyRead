@@ -125,11 +125,6 @@
         </div>
       </div>
       <div id="projects_list">
-        {%
-      set priority = {1:"Samples Received", 2: "Reception Control
-      finished", 3: "Library QC finished", 4: "All
-      Samples Sequenced", 5: "All Raw data Delivered"}
-    %}
         {% for date_prio, date_type in priority | dictsort %}
       <div class="row p-3">
         <div class="col-sm border-end border-primary me-3 d-flex align-items-center" style="--bs-border-width: 15px;">
