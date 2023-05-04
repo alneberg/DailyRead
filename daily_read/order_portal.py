@@ -23,6 +23,10 @@ class OrderPortal(object):
         if base_url is None:
             raise ValueError("environment variable ORDER_PORTAL_URL not set")
 
+        # Add trailing / for urljoin to parse order portal url properly
+        if not base_url.endswith("/"):
+            base_url = f"{base_url}/"
+
         if api_key is None:
             raise ValueError("Environment variable ORDER_PORTAL_API_KEY not set")
 
@@ -64,6 +68,15 @@ class OrderPortal(object):
     def process_orders(self, closed_before_in_days=30):
         """Process orderers orders to select ones that need to be updated"""
 
+        dates_prio = {
+            "All Raw data Delivered": 5,
+            "All Samples Sequenced": 4,
+            "Library QC finished": 3,
+            "Reception Control finished": 2,
+            "Samples Received": 1,
+            "None": 0,
+        }
+
         order_updates = {}
         pull_date = datetime.datetime.now()
         older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
@@ -76,20 +89,55 @@ class OrderPortal(object):
             if order["identifier"] in self.projects_data.data.keys():
                 proj_info = self.projects_data.data[order["identifier"]]
                 if order["reports"]:
-                    proj_prog_rep = next(item for item in order["reports"] if item["name"] == "Project Progress")
-                    proj_info.report_iuid = proj_prog_rep["iuid"]
-                if proj_info.orderer in order_updates:
-                    order_updates[proj_info.orderer]["projects"].append(proj_info)
-                else:
+                    prog_reports = [item for item in order["reports"] if item["name"] == "Project Progress"]
+                    if prog_reports:
+                        if len(prog_reports) == 1:
+                            proj_info.report_iuid = prog_reports[0]["iuid"]
+                        else:
+                            raise ValueError(
+                                f"Multiple reports for Project Progress found in the Order Portal for order {order['identifier']}"
+                            )
+
+                if proj_info.orderer not in order_updates:
                     order_updates[proj_info.orderer] = {
                         "pull_date": f"{pull_date}",
-                        "projects": [proj_info],
+                        "active_projects": 0,
+                        "recents": {},
+                        "projects": {},
                     }
 
+                latest_date = "0000-00-00"
+                latest_status = "None"
+                for date_value, date_statuses in proj_info.data["proj_dates"].items():
+                    # Activity on 5 recent dates
+                    recents_keys = sorted(order_updates[proj_info.orderer]["recents"].keys())
+                    if len(recents_keys) < 5:
+                        for status in date_statuses:
+                            order_updates[proj_info.orderer]["recents"].setdefault(date_value, []).append(
+                                (proj_info.data["project_name"], status)
+                            )
+                    else:
+                        if date_value > recents_keys[0]:
+                            order_updates[proj_info.orderer]["recents"].pop(recents_keys[0])
+                            for status in date_statuses:
+                                order_updates[proj_info.orderer]["recents"].setdefault(date_value, []).append(
+                                    (proj_info.data["project_name"], status)
+                                )
+
+                    # Find status
+                    if date_value > latest_date:
+                        latest_date = date_value
+                        for status in date_statuses:
+                            if dates_prio[status] > dates_prio[latest_status]:
+                                latest_status = status
+
+                order_updates[proj_info.orderer]["projects"].setdefault(latest_status, []).append(proj_info)
+                order_updates[proj_info.orderer]["active_projects"] += 1
         return order_updates
 
     def upload_report_to_order_portal(self, report, project):
         """Upload report to order portal"""
+        # Encoded to utf-8 to display special characters properly
         add_to_url = ""
         if project.report_iuid:
             add_to_url = f"/{project.report_iuid}"
@@ -104,6 +152,7 @@ class OrderPortal(object):
                 content_type="text/html",
             ),
         )
+
         # TODO: check Encoded to utf-8 to display special characters properly
         response = requests.post(url, headers=self.headers, json=indata)
 
