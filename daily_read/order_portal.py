@@ -90,10 +90,13 @@ class OrderPortal(object):
                 proj_info = self.projects_data.data[order["identifier"]]
                 if order["reports"]:
                     prog_reports = [item for item in order["reports"] if item["name"] == "Project Progress"]
-                    if len(prog_reports) > 1:
-                        log.error(f"Multiple reports for Project Progress for order {order['identifier']}")
-                    else:
-                        proj_info.report_iuid = prog_reports[0]["iuid"]
+                    if prog_reports:
+                        if len(prog_reports) == 1:
+                            proj_info.report_iuid = prog_reports[0]["iuid"]
+                        else:
+                            raise ValueError(
+                                f"Multiple reports for Project Progress found in the Order Portal for order {order['identifier']}"
+                            )
 
                 if proj_info.orderer not in order_updates:
                     order_updates[proj_info.orderer] = {
@@ -105,8 +108,7 @@ class OrderPortal(object):
 
                 latest_date = "0000-00-00"
                 latest_status = "None"
-                for date_value in proj_info.data["proj_dates"]:
-                    date_statuses = proj_info.data["proj_dates"][date_value]
+                for date_value, date_statuses in proj_info.data["proj_dates"].items():
                     # Activity on 5 recent dates
                     recents_keys = sorted(order_updates[proj_info.orderer]["recents"].keys())
                     if len(recents_keys) < 5:
