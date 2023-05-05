@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-    <iframe
-        id="ngi_progress_report"
-        srcdoc='
+  <iframe
+    id="ngi_progress_report"
+    srcdoc='
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -112,66 +112,63 @@
           <div class="list-group">
           <!-- TODO: See if one can get prettier to not mess up indentation here -->
             {% for date, project_status in data["recents"] | dictsort(reverse=true) %}
-            <div class="list-group-item list-group-item">
-                <h5 class="mb-1">{{ date }}</h5>
-                <dl class="row mb-0 justify-content-center">
-                    <dt class="col-sm-5">{{ project_status[0] }}</dt>
-                    <dd class="col-sm-3">{{ project_status[1] }}</dd>
-                </dl>
-            </div>
-        {% endfor %}
+      <div class="list-group-item list-group-item">
+        <h5 class="mb-1">{{ date }}</h5>
+        <dl class="row mb-0 justify-content-center">
+          <dt class="col-sm-5">{{ project_status[0] }}</dt>
+          <dd class="col-sm-3">{{ project_status[1] }}</dd>
+        </dl>
+      </div>
+    {% endfor %}
           </div>
         </div>
       </div>
       <div id="projects_list">
         {% for date_prio, date_type in priority | dictsort %}
-            <div class="row p-3">
-                <div
-                    class="col-sm border-end border-primary me-3 d-flex align-items-center"
-                    style="--bs-border-width: 15px;"
-                >
-                    <div class="fs-1">
-                        {{ date_type }}
-                    </div>
-                </div>
-                <div class="col-sm">
-                    {% for project in data["projects"][date_type] %}
-                        <div class="accordion">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button
-                                        class="accordion-button collapsed"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#panel_project_{{ project.project_id }}"
-                                        aria-expanded="false"
-                                        aria-controls="panel_project_{{ project.project_id }}"
-                                    >
-                                        {{ project.internal_name }}
-                                    </button>
-                                </h2>
-                                <div id="panel_project_{{ project.project_id }}" class="accordion-collapse collapse">
-                                    <div class="accordion-body">
-                                        {% for date, statuses in project.project_dates | dictsort %}
-                                            {% if project.project_dates[date] and project.project_dates[date] != "XXXX-XX-XX" %}
-                                                <ul class="list-group list-group-horizontal">
-                                                    <li class="list-group-item col-4">{{ date }}</li>
-                                                    <li class="list-group-item col-8">
-                                                        {% for status in statuses %}
-                                                            {{ status }}<br />
-                                                        {% endfor %}
-                                                    </li>
-                                                </ul>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+      <div class="row p-3">
+        <div class="col-sm border-end border-primary me-3 d-flex align-items-center" style="--bs-border-width: 15px;">
+          <div class="fs-1">
+            {{ date_type }}
+          </div>
+        </div>
+        <div class="col-sm">
+          {% for project in data["projects"][date_type] %}
+            <div class="accordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#panel_project_{{ project.project_id }}"
+                    aria-expanded="false"
+                    aria-controls="panel_project_{{ project.project_id }}"
+                  >
+                    {{ project.internal_name }}
+                  </button>
+                </h2>
+                <div id="panel_project_{{ project.project_id }}" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                    {% for date, statuses in project.project_dates | dictsort %}
+                      {% if project.project_dates[date] and project.project_dates[date] != "XXXX-XX-XX" %}
+                        <ul class="list-group list-group-horizontal">
+                          <li class="list-group-item col-4">{{ date }}</li>
+                          <li class="list-group-item col-8">
+                            {% for status in statuses %}
+                              {{ status }}<br />
+                            {% endfor %}
+                          </li>
+                        </ul>
+                      {% endif %}
                     {% endfor %}
+                  </div>
                 </div>
+              </div>
             </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
       </div>
     </div>
     <script
@@ -181,9 +178,9 @@
     ></script>
   </body>
     '
-        width="120%"
-        height="4000"
-        frameborder="0"
-        sandbox="allow-scripts"
-    ></iframe>
+    width="120%"
+    height="4000"
+    frameborder="0"
+    sandbox="allow-scripts"
+  ></iframe>
 </html>
