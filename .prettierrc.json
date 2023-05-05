@@ -2,7 +2,7 @@
     "printWidth": 120,
     "overrides": [
         {
-            "files": ["*.html"],
+            "files": ["*.html.j2"],
             "options": {
                 "parser": "jinja-template"
             }
