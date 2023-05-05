@@ -16,7 +16,7 @@ class DailyReport(object):
 
     def __init__(self):
         self.jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("./daily_read/templates"))
-        self.template = self.jinja_env.get_template("daily_report.html")
+        self.template = self.jinja_env.get_template("daily_report.html.j2")
 
     def populate_and_write_report(self, pi_email, data, priority, out_dir=None):
         """Populate report with values"""
