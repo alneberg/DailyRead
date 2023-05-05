@@ -15,7 +15,13 @@
     },
     "customizations": {
         "vscode": {
-            "extensions": ["esbenp.prettier-vscode", "ms-vscode.live-server"]
+            "extensions": [
+                "esbenp.prettier-vscode",
+                "ms-vscode.live-server",
+                "wholroyd.jinja",
+                "ms-python.python",
+                "ms-python.black-formatter"
+            ]
         }
     },
 
