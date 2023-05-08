@@ -79,7 +79,7 @@ class OrderPortal(object):
             ):
                 continue
             elif order["identifier"] not in self.projects_data.data.keys():
-                log.debug(f"Order portal id: {order['identifier']} not found in data fetched form sources")
+                log.debug(f"Order portal id: {order['identifier']} not found in data fetched from sources")
                 continue
 
             proj_info = self.projects_data.data[order["identifier"]]
