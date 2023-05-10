@@ -232,7 +232,7 @@ class ProjectDataRecord(object):
 
             # If multiple statuses for the same date, choose the one with highest prio
             if len(latest_statuses) > 1:
-                status = sorted(latest_statuses, key=lambda s: self.dates_prio[s])[0]
+                self.status = sorted(latest_statuses, key=lambda s: self.dates_prio[s])[0]
             else:
                 self.status = latest_statuses[0]
         else:

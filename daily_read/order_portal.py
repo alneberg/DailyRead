@@ -106,7 +106,7 @@ class OrderPortal(object):
             order_updates_item["events"] += proj_info.events
 
             # Sort the statuses based on date and extract the 5 first (done repeatedly for each new project added)
-            orderer_recents = dict(sorted(order_updates_item["events"], reverse=True)[:5])
+            orderer_recents = sorted(order_updates_item["events"], reverse=True)[:5]
 
             order_updates_item["recents"] = orderer_recents
             order_updates_item["projects"].setdefault(proj_info.status, []).append(proj_info)

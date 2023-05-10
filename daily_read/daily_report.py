@@ -25,8 +25,8 @@ class DailyReport(object):
         filled_report = self.template.render(pi_email=pi_email, data=data, priority=priority)
 
         if out_dir:
-            log.info(f"Writing reports into {out_dir}")
             file_name = os.path.join(out_dir, f"{pi_email.split('@')[0]}_{pull_date}.html")
+            log.info(f"Writing report {file_name}")
             with open(file_name, mode="w", encoding="utf-8") as file:
                 file.write(filled_report)
                 log.debug(f"... wrote {file_name}")
