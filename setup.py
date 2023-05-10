@@ -24,7 +24,7 @@ setup(
     author_email="johannes.alneberg@scilifelab.se",
     url="https://github.com/NationalGenomicsInfrastructure/DailyRead",
     license="MIT",
-    entry_points={"console_scripts": ["daily_read=daily_read.__main__:daily_read_safe_cli"]},
+    entry_points={"console_scripts": ["daily_read=daily_read.__main__:daily_read_cli"]},
     install_requires=required,
     packages=find_packages(exclude=("docs")),
     include_package_data=True,

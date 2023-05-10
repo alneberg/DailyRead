@@ -68,71 +68,50 @@ class OrderPortal(object):
     def process_orders(self, closed_before_in_days=30):
         """Process orderers orders to select ones that need to be updated"""
 
-        dates_prio = {
-            "All Raw data Delivered": 5,
-            "All Samples Sequenced": 4,
-            "Library QC finished": 3,
-            "Reception Control finished": 2,
-            "Samples Received": 1,
-            "None": 0,
-        }
-
         order_updates = {}
         pull_date = datetime.datetime.now()
         older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
         for order in self.all_orders:
+            # Skip projects closed some time ago or if data is not available
             if (
                 order["status"] == "closed"
                 and datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date() >= older_than_cutoff
             ):
                 continue
-            if order["identifier"] in self.projects_data.data.keys():
-                proj_info = self.projects_data.data[order["identifier"]]
-                if order["reports"]:
-                    prog_reports = [item for item in order["reports"] if item["name"] == "Project Progress"]
-                    if prog_reports:
-                        if len(prog_reports) == 1:
-                            proj_info.report_iuid = prog_reports[0]["iuid"]
-                        else:
-                            raise ValueError(
-                                f"Multiple reports for Project Progress found in the Order Portal for order {order['identifier']}"
-                            )
+            elif order["identifier"] not in self.projects_data.data.keys():
+                log.debug(f"Order portal id: {order['identifier']} not found in data fetched from sources")
+                continue
 
-                if proj_info.orderer not in order_updates:
-                    order_updates[proj_info.orderer] = {
-                        "pull_date": f"{pull_date}",
-                        "active_projects": 0,
-                        "recents": {},
-                        "projects": {},
-                    }
-
-                latest_date = "0000-00-00"
-                latest_status = "None"
-                for date_value, date_statuses in proj_info.data["proj_dates"].items():
-                    # Activity on 5 recent dates
-                    recents_keys = sorted(order_updates[proj_info.orderer]["recents"].keys())
-                    if len(recents_keys) < 5:
-                        for status in date_statuses:
-                            order_updates[proj_info.orderer]["recents"].setdefault(date_value, []).append(
-                                (proj_info.data["project_name"], status)
-                            )
+            proj_info = self.projects_data.data[order["identifier"]]
+            if order["reports"]:
+                prog_reports = [item for item in order["reports"] if item["name"] == "Project Progress"]
+                if prog_reports:
+                    if len(prog_reports) == 1:
+                        proj_info.report_iuid = prog_reports[0]["iuid"]
                     else:
-                        if date_value > recents_keys[0]:
-                            order_updates[proj_info.orderer]["recents"].pop(recents_keys[0])
-                            for status in date_statuses:
-                                order_updates[proj_info.orderer]["recents"].setdefault(date_value, []).append(
-                                    (proj_info.data["project_name"], status)
-                                )
+                        raise ValueError(
+                            f"Multiple reports for Project Progress found in the Order Portal for order {order['identifier']}"
+                        )
 
-                    # Find status
-                    if date_value > latest_date:
-                        latest_date = date_value
-                        for status in date_statuses:
-                            if dates_prio[status] > dates_prio[latest_status]:
-                                latest_status = status
+            if proj_info.orderer not in order_updates:
+                order_updates[proj_info.orderer] = {
+                    "pull_date": f"{pull_date}",
+                    "active_projects": 0,
+                    "recents": {},
+                    "events": [],
+                    "projects": {},
+                }
 
-                order_updates[proj_info.orderer]["projects"].setdefault(latest_status, []).append(proj_info)
-                order_updates[proj_info.orderer]["active_projects"] += 1
+            order_updates_item = order_updates[proj_info.orderer]
+            order_updates_item["events"] += proj_info.events
+
+            # Sort the statuses based on date and extract the 5 first (done repeatedly for each new project added)
+            orderer_recents = sorted(order_updates_item["events"], reverse=True)[:5]
+
+            order_updates_item["recents"] = orderer_recents
+            order_updates_item["projects"].setdefault(proj_info.status, []).append(proj_info)
+            order_updates_item["active_projects"] += 1
+
         return order_updates
 
     def upload_report_to_order_portal(self, report, project):

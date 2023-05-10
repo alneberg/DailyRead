@@ -110,26 +110,20 @@
         <div class="col-10">
           <div class="d-flex justify-content-center"><h4>Recent activity</h4></div>
           <div class="list-group">
-            {% for date, projects_list in data["recents"] | dictsort(reverse=true) %}
+          <!-- TODO: See if one can get prettier to not mess up indentation here -->
+            {% for date, project_status in data["recents"] | sort(reverse=true) %}
       <div class="list-group-item list-group-item">
         <h5 class="mb-1">{{ date }}</h5>
-        {% for item in projects_list %}
-          <dl class="row mb-0 justify-content-center">
-            <dt class="col-sm-5">{{ item[0] }}</dt>
-            <dd class="col-sm-3">{{ item[1] }}</dd>
-          </dl>
-        {% endfor %}
+        <dl class="row mb-0 justify-content-center">
+          <dt class="col-sm-5">{{ project_status[0] }}</dt>
+          <dd class="col-sm-3">{{ project_status[1] }}</dd>
+        </dl>
       </div>
     {% endfor %}
           </div>
         </div>
       </div>
       <div id="projects_list">
-        {%
-      set priority = {1:"Samples Received", 2: "Reception Control
-      finished", 3: "Library QC finished", 4: "All
-      Samples Sequenced", 5: "All Raw data Delivered"}
-    %}
         {% for date_prio, date_type in priority | dictsort %}
       <div class="row p-3">
         <div class="col-sm border-end border-primary me-3 d-flex align-items-center" style="--bs-border-width: 15px;">
@@ -150,13 +144,13 @@
                     aria-expanded="false"
                     aria-controls="panel_project_{{ project.project_id }}"
                   >
-                    {{ project.data["project_name"] }}
+                    {{ project.internal_name }}
                   </button>
                 </h2>
                 <div id="panel_project_{{ project.project_id }}" class="accordion-collapse collapse">
                   <div class="accordion-body">
-                    {% for date, statuses in project.data["proj_dates"] | dictsort %}
-                      {% if project.data["proj_dates"][date] and project.data["proj_dates"][date] != "XXXX-XX-XX" %}
+                    {% for date, statuses in project.project_dates | dictsort %}
+                      {% if project.project_dates[date] and project.project_dates[date] != "XXXX-XX-XX" %}
                         <ul class="list-group list-group-horizontal">
                           <li class="list-group-item col-4">{{ date }}</li>
                           <li class="list-group-item col-8">

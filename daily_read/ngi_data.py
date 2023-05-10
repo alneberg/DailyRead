@@ -32,7 +32,7 @@ class ProjectDataMaster(object):
         self._data_fetched = False
         self._data_saved = False
 
-        self.data = {}
+        self.data = {}  # Key: Portal_id, Value: ProjectDataRecord
 
     def __setup_data_repo(self):
         # Safety check of path
@@ -75,12 +75,14 @@ class ProjectDataMaster(object):
         """Modifed and not staged files"""
         return [diff.b_path for diff in self.data_repo.index.diff(None)]
 
-    def get_data(self):
+    def get_data(self, project_id=None, source_name=None, close_date=None):
         """Downloads data for each source into memory"""
 
         for source in self.sources:
+            if source_name is not None and source.name != source_name:
+                continue
             try:
-                self.data.update(source.get_data())
+                self.data.update(source.get_data(project_id=project_id, close_date=close_date))
             except Exception as e:
                 log.error(f"Failed to fetch data from {source.name}")
                 log.exception(e)
@@ -119,7 +121,7 @@ class ProjectDataMaster(object):
 
             with open(abs_path, mode="w") as fh:
                 log.debug(f"Writing data for {project_record.project_id} to {abs_path}")
-                fh.write(json.dumps(project_record.data))
+                fh.write(json.dumps(project_record.data_for_file()))
 
         self._data_saved = True
 
@@ -159,7 +161,9 @@ class ProjectDataMaster(object):
             if portal_id in self.data:
                 project_record = self.data[portal_id]
             else:
-                project_record = ProjectDataRecord(project_path)
+                log.info("Data not fetched this time for {portal_id}, read data from file")
+                orderer, project_dates, internal_id, internal_name = ProjectDataRecord.data_from_file(project_path)
+                project_record = ProjectDataRecord(project_path, orderer, project_dates, internal_id, internal_name)
             projects_list.append(project_record)
 
         return projects_list
@@ -185,7 +189,16 @@ class ProjectDataRecord(object):
     Raises ValueError if orderer is not present in data, if data is given
     """
 
-    def __init__(self, relative_path, data=None):
+    dates_prio = {
+        "All Raw data Delivered": 5,
+        "All Samples Sequenced": 4,
+        "Library QC finished": 3,
+        "Reception Control finished": 2,
+        "Samples Received": 1,
+        "None": 0,
+    }
+
+    def __init__(self, relative_path, orderer, project_dates, internal_id=None, internal_name=None):
         """relative_path: e.g. "NGIS/2023/NGI0002313.json" """
         node_year, file_name = os.path.split(relative_path)
         node, year = os.path.split(node_year)
@@ -200,19 +213,68 @@ class ProjectDataRecord(object):
         self.project_id = project_id
         self.report_iuid = None
 
-        self.orderer = None
-        self.data = None
+        self.orderer = orderer
+        self.project_dates = project_dates
 
-        if data is not None:
-            if "orderer" not in data:
-                raise ValueError(f"Orderer missing for project_id: {project_id}, NGI node: {node}")
+        self.internal_id = internal_id
+        self.internal_name = internal_name
+        self.events = []  # List of tuples (date_value, (date_status, internal_name_or_portal_id))
+        self.status = None
 
-            self.orderer = data["orderer"]
+        for date_value, date_statuses in project_dates.items():
+            for date_status in date_statuses:
+                self.events.append((date_value, (date_status, self.internal_name_or_portal_id)))
 
-            self.data = data
+        # Figure out project status from the latest status(es)
+
+        if project_dates:
+            latest_date, latest_statuses = sorted(project_dates.items(), reverse=True)[0]
+
+            # If multiple statuses for the same date, choose the one with highest prio
+            if len(latest_statuses) > 1:
+                self.status = sorted(latest_statuses, key=lambda s: self.dates_prio[s])[0]
+            else:
+                self.status = latest_statuses[0]
         else:
-            # TODO read from json file here.
-            pass
+            log.info(f"No project dates found for {project_id}")
+
+    @property
+    def internal_id_or_portal_id(self):
+        """Returns internal id if set, otherwise portal id"""
+        if self.internal_id:
+            return self.internal_id
+        return self.project_id
+
+    @property
+    def internal_name_or_portal_id(self):
+        """Returns internal name if set, otherwise portal id"""
+        if self.internal_name:
+            return self.internal_name
+        return self.project_id
+
+    def data_for_file(self):
+        """Returns data in a dictionary suitable for saving as json"""
+        return {
+            "orderer": self.orderer,
+            "project_dates": self.project_dates,
+            "internal_id": self.internal_id,
+            "internal_name": self.internal_name,
+        }
+
+    def data_from_file(relative_path):
+        """Returns orderer and project dates from info in json file"""
+        with open(relative_path, "r") as fh:
+            data = json.load(fh)
+
+        internal_id = None
+        if "internal_id" in data:
+            internal_id = data["internal_id"]
+
+        internal_name = None
+        if "internal_name" in data:
+            internal_name = data["internal_name"]
+
+        return data["orderer"], data["project_dates"], internal_id, internal_name
 
     def portal_id_from_path(path):
         """Class method to parse out project portal id (e.g. filename without extension) from given path"""
@@ -229,18 +291,46 @@ class StockholmProjectData(object):
         self.dirname = "NGIS"
         self.statusdb_session = statusdb.StatusDBSession(config)
 
-    def get_data(self, project_id=None):
+    def get_data(self, project_id=None, close_date=None):
+        """Fetch data from Stockholm StatusDB.
+
+        If close_date is not given, defaults to 6 months ago.
+        Close date should be a relative delta.
+        """
         self.data = {}
         if project_id is not None:
             self.get_entry(project_id)
         else:
-            close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
+            if close_date is None:
+                close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
             for row in self.statusdb_session.rows(close_date=close_date):
                 order_year = "2023"  # TODO - get order year from data
                 portal_id = row.value["portal_id"]
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
-                self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
+
+                project_dates = row.value["proj_dates"]
+                orderer = row.value["orderer"]
+                internal_id = row.value["project_id"]
+                internal_name = row.value["project_name"]
+
+                self.data[portal_id] = ProjectDataRecord(
+                    relative_path, orderer, project_dates, internal_id, internal_name
+                )
+
         return self.data
+
+    def get_entry(self, project_id):
+        """Fetches data for a single project from statusdb"""
+        close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
+        rows = self.statusdb_session.rows(close_date=close_date)
+        for row in rows:
+            if row.value["portal_id"] == project_id:
+                order_year = "2023"  # TODO - get order year from data
+                portal_id = row.value["portal_id"]
+                relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
+                self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
+                return
+        raise ValueError(f"Project {project_id} not found in statusdb")
 
 
 class SNPSEQProjectData(object):
