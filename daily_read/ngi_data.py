@@ -156,12 +156,14 @@ class ProjectDataMaster(object):
         projects.update(self.data_repo.untracked_files)
 
         projects_list = []
-        for project_path in projects:
-            portal_id = ProjectDataRecord.portal_id_from_path(project_path)
+        for project_relpath in projects:
+            portal_id = ProjectDataRecord.portal_id_from_path(project_relpath)
             if portal_id in self.data:
                 project_record = self.data[portal_id]
             else:
-                log.info("Data not fetched this time for {portal_id}, read data from file")
+                log.info(f"Data not fetched this time for {portal_id}, read data from file")
+                project_path = os.path.join(self.data_location, project_relpath)
+
                 orderer, project_dates, internal_id, internal_name = ProjectDataRecord.data_from_file(project_path)
                 project_record = ProjectDataRecord(project_path, orderer, project_dates, internal_id, internal_name)
             projects_list.append(project_record)
