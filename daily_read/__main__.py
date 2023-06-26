@@ -40,6 +40,8 @@ STATUS_PRIORITY = {
     5: "All Raw data Delivered",
 }
 
+STATUS_PRIORITY_REV = {v: k for k, v in STATUS_PRIORITY.items()}
+
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 def daily_read_cli():
@@ -76,7 +78,7 @@ def generate_all(upload=False, develop=False):
             nr_orderers += 1
         if nr_orderers > 4 and develop:
             break
-    modified_orders = op.process_orders()
+    modified_orders = op.process_orders(STATUS_PRIORITY_REV)
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner in modified_orders:
@@ -132,7 +134,7 @@ def generate_single(project, include_older=False):
         sys.exit(1)
 
     op.get_orders(orderer=orderer)
-    filtered_orders = op.process_orders()
+    filtered_orders = op.process_orders(STATUS_PRIORITY_REV)
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner, owner_orders in filtered_orders.items():

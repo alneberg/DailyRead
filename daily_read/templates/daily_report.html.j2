@@ -111,7 +111,7 @@
           <div class="d-flex justify-content-center"><h4>Recent activity</h4></div>
           <div class="list-group">
           <!-- TODO: See if one can get prettier to not mess up indentation here -->
-            {% for date, project_status in data["recents"] | sort(reverse=true) %}
+            {% for date, project_status in data["recents"] %}
       <div class="list-group-item list-group-item">
         <h5 class="mb-1">{{ date }}</h5>
         <dl class="row mb-0 justify-content-center">
