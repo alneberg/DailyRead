@@ -11,6 +11,17 @@ import jinja2
 log = logging.getLogger(__name__)
 
 
+STATUS_ICONS = {
+    "All Raw data Delivered": "cloud-download",
+    "All Samples Sequenced": "body-text",
+    "Library QC finished": "check2-all",
+    "Reception Control finished": "check2",
+    "Samples Received": "box-seam",
+}
+
+PORTAL_URL = "https://ngisweden.scilifelab.se/orders"
+
+
 class DailyReport(object):
     """Class to handle daily report generation"""
 
@@ -22,7 +33,10 @@ class DailyReport(object):
         """Populate report with values"""
         pull_date = f"{datetime.datetime.strptime(data['pull_date'], '%Y-%m-%d %H:%M:%S.%f').date()}"
         data["pull_date"] = pull_date
-        filled_report = self.template.render(pi_email=pi_email, data=data, priority=priority)
+
+        filled_report = self.template.render(
+            pi_email=pi_email, data=data, priority=priority, icons=STATUS_ICONS, portal_url=PORTAL_URL
+        )
 
         if out_dir:
             file_name = os.path.join(out_dir, f"{pi_email.split('@')[0]}_{pull_date}.html")

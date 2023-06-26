@@ -17,6 +17,7 @@
       integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesnt work if you view the page via file:// -->
@@ -107,17 +108,28 @@
         </div>
       </div>
       <div id="recents_list" class="row justify-content-center mt-3">
-        <div class="col-10">
+        <div class="col-8">
           <div class="d-flex justify-content-center"><h4>Recent activity</h4></div>
           <div class="list-group">
-          <!-- TODO: See if one can get prettier to not mess up indentation here -->
-            {% for date, project_status in data["recents"] %}
-      <div class="list-group-item list-group-item">
-        <h5 class="mb-1">{{ date }}</h5>
-        <dl class="row mb-0 justify-content-center">
-          <dt class="col-sm-5">{{ project_status[0] }}</dt>
-          <dd class="col-sm-3">{{ project_status[1] }}</dd>
-        </dl>
+            <!-- TODO: See if one can get prettier to not mess up indentation here -->
+            {% for date, status_project in data["recents"] %}
+      <div href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+        <h4>
+          <i class="bi bi-{{ icons[status_project[0]] }} flex-shrink-0"></i>
+        </h4>
+        <div class="d-flex gap-2 w-100 justify-content-between">
+          <div>
+            <h6 class="mb-0">{{ status_project[0] }}</h6>
+            <p class="mb-0 opacity-75">
+              {{ status_project[1].internal_name_or_portal_id }}
+              -
+              <a target="_parent" href="{{ portal_url }}/order/{{ status_project[1].project_id }}"
+                >{{ status_project[1].project_id }}</a
+              >
+            </p>
+          </div>
+          <small class="opacity-50 text-nowrap">{{ date }}</small>
+        </div>
       </div>
     {% endfor %}
           </div>

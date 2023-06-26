@@ -220,12 +220,12 @@ class ProjectDataRecord(object):
 
         self.internal_id = internal_id
         self.internal_name = internal_name
-        self.events = []  # List of tuples (date_value, (date_status, internal_name_or_portal_id))
+        self.events = []  # List of tuples (date_value, (date_status, <ProjectDataRecord>))
         self.status = None
 
         for date_value, date_statuses in project_dates.items():
             for date_status in date_statuses:
-                self.events.append((date_value, (date_status, self.internal_name_or_portal_id)))
+                self.events.append((date_value, (date_status, self)))
 
         # Figure out project status from the latest status(es)
 
