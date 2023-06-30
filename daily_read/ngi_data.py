@@ -156,12 +156,14 @@ class ProjectDataMaster(object):
         projects.update(self.data_repo.untracked_files)
 
         projects_list = []
-        for project_path in projects:
-            portal_id = ProjectDataRecord.portal_id_from_path(project_path)
+        for project_relpath in projects:
+            portal_id = ProjectDataRecord.portal_id_from_path(project_relpath)
             if portal_id in self.data:
                 project_record = self.data[portal_id]
             else:
-                log.info("Data not fetched this time for {portal_id}, read data from file")
+                log.info(f"Data not fetched this time for {portal_id}, read data from file")
+                project_path = os.path.join(self.data_location, project_relpath)
+
                 orderer, project_dates, internal_id, internal_name = ProjectDataRecord.data_from_file(project_path)
                 project_record = ProjectDataRecord(project_path, orderer, project_dates, internal_id, internal_name)
             projects_list.append(project_record)
@@ -218,12 +220,12 @@ class ProjectDataRecord(object):
 
         self.internal_id = internal_id
         self.internal_name = internal_name
-        self.events = []  # List of tuples (date_value, (date_status, internal_name_or_portal_id))
+        self.events = []  # List of tuples (date_value, (date_status, <ProjectDataRecord>))
         self.status = None
 
         for date_value, date_statuses in project_dates.items():
             for date_status in date_statuses:
-                self.events.append((date_value, (date_status, self.internal_name_or_portal_id)))
+                self.events.append((date_value, (date_status, self)))
 
         # Figure out project status from the latest status(es)
 
@@ -232,7 +234,7 @@ class ProjectDataRecord(object):
 
             # If multiple statuses for the same date, choose the one with highest prio
             if len(latest_statuses) > 1:
-                self.status = sorted(latest_statuses, key=lambda s: self.dates_prio[s])[0]
+                self.status = sorted(latest_statuses, key=lambda s: self.dates_prio[s], reverse=True)[0]
             else:
                 self.status = latest_statuses[0]
         else:

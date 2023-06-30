@@ -65,7 +65,7 @@ class OrderPortal(object):
             raise
         log.info(f"Fetched a total of {len(self.all_orders)} order(s) from the Order Portal")
 
-    def process_orders(self, closed_before_in_days=30):
+    def process_orders(self, priority, closed_before_in_days=30):
         """Process orderers orders to select ones that need to be updated"""
 
         order_updates = {}
@@ -105,8 +105,14 @@ class OrderPortal(object):
             order_updates_item = order_updates[proj_info.orderer]
             order_updates_item["events"] += proj_info.events
 
-            # Sort the statuses based on date and extract the 5 first (done repeatedly for each new project added)
-            orderer_recents = sorted(order_updates_item["events"], reverse=True)[:5]
+            # Sort the statuses based on date and priority of event and extract the 5 first (done repeatedly for each new project added)
+
+            def sorting_key(item):
+                """Outputs date and the priority label for the status."""
+                date, (status, _) = item
+                return date, priority[status]
+
+            orderer_recents = sorted(order_updates_item["events"], reverse=True, key=sorting_key)[:5]
 
             order_updates_item["recents"] = orderer_recents
             order_updates_item["projects"].setdefault(proj_info.status, []).append(proj_info)
