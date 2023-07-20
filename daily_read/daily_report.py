@@ -36,9 +36,7 @@ class DailyReport(object):
     """Class to handle daily report generation"""
 
     def __init__(self):
-        self.jinja_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader("./daily_read/templates")
-        )
+        self.jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader("./daily_read/templates"))
         self.template = self.jinja_env.get_template("daily_report.html.j2")
 
     def populate_and_write_report(self, pi_email, data, priority, out_dir=None):
@@ -57,9 +55,7 @@ class DailyReport(object):
         )
 
         if out_dir:
-            file_name = os.path.join(
-                out_dir, f"{pi_email.split('@')[0]}_{pull_date}.html"
-            )
+            file_name = os.path.join(out_dir, f"{pi_email.split('@')[0]}_{pull_date}.html")
             log.info(f"Writing report {file_name}")
             with open(file_name, mode="w", encoding="utf-8") as file:
                 file.write(filled_report)
@@ -70,14 +66,10 @@ class DailyReport(object):
         git_commits = {}
         try:
             git_commits["git_commit"] = (
-                subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"])
-                .decode(sys.stdout.encoding)
-                .strip()
+                subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"]).decode(sys.stdout.encoding).strip()
             )
             git_commits["git_commit_full"] = (
-                subprocess.check_output(["git", "rev-parse", "HEAD"])
-                .decode(sys.stdout.encoding)
-                .strip()
+                subprocess.check_output(["git", "rev-parse", "HEAD"]).decode(sys.stdout.encoding).strip()
             )
         except:
             git_commits["git_commit"] = "unknown"
