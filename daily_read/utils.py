@@ -21,14 +21,10 @@ def get_git_commits():
     git_commits = {}
     try:
         git_commits["git_commit"] = (
-            subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"])
-            .decode(sys.stdout.encoding)
-            .strip()
+            subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"]).decode(sys.stdout.encoding).strip()
         )
         git_commits["git_commit_full"] = (
-            subprocess.check_output(["git", "rev-parse", "HEAD"])
-            .decode(sys.stdout.encoding)
-            .strip()
+            subprocess.check_output(["git", "rev-parse", "HEAD"]).decode(sys.stdout.encoding).strip()
         )
     except:
         git_commits["git_commit"] = "unknown"
