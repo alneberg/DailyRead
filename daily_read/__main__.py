@@ -19,6 +19,7 @@ import daily_read.config
 import daily_read.daily_report
 import daily_read.ngi_data
 import daily_read.order_portal
+import daily_read.utils
 
 
 dotenv.load_dotenv()
@@ -26,7 +27,7 @@ config_values = daily_read.config.Config()
 
 rich_handler = RichHandler()
 rich_handler.setFormatter(logging.Formatter("%(message)s"))
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - Commit: %(commit)s - %(message)s"
 
 if not os.path.isabs(config_values.LOG_LOCATION):
     raise ValueError(f"Log location is not an absolute path: {config_values.LOG_LOCATION}")
@@ -39,6 +40,7 @@ log_file = os.path.join(config_values.LOG_LOCATION, "DailyRead.log")
 rotating_file_handler = logging.handlers.RotatingFileHandler(
     log_file, maxBytes=1024 * 1024 * 100, backupCount=5
 )  # 5 files of 100MB
+rotating_file_handler.addFilter(daily_read.utils.ContextFilter())
 
 
 logging.basicConfig(

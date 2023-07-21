@@ -4,11 +4,12 @@
 import datetime
 import logging
 import os
-import sys
-import subprocess
 
 # installed
 import jinja2
+
+# Own
+import daily_read.utils
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class DailyReport(object):
         """Populate report with values"""
         pull_date = f"{datetime.datetime.strptime(data['pull_date'], '%Y-%m-%d %H:%M:%S.%f').date()}"
         data["pull_date"] = pull_date
-        git_commits = self.get_git_commits()
+        git_commits = daily_read.utils.get_git_commits()
         filled_report = self.template.render(
             pi_email=pi_email,
             data=data,
@@ -61,17 +62,3 @@ class DailyReport(object):
                 file.write(filled_report)
                 log.debug(f"... wrote {file_name}")
         return filled_report
-
-    def get_git_commits(self):
-        git_commits = {}
-        try:
-            git_commits["git_commit"] = (
-                subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"]).decode(sys.stdout.encoding).strip()
-            )
-            git_commits["git_commit_full"] = (
-                subprocess.check_output(["git", "rev-parse", "HEAD"]).decode(sys.stdout.encoding).strip()
-            )
-        except:
-            git_commits["git_commit"] = "unknown"
-            git_commits["git_commit_full"] = "unknown"
-        return git_commits
