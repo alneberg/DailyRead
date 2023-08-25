@@ -1,5 +1,4 @@
 import os
-import yaml
 
 
 class Config(object):
@@ -8,6 +7,7 @@ class Config(object):
         self.ORDER_PORTAL_API_KEY = os.getenv("DAILY_READ_ORDER_PORTAL_API_KEY")
         self.REPORTS_LOCATION = os.getenv("DAILY_READ_REPORTS_LOCATION")
         self.DATA_LOCATION = os.getenv("DAILY_READ_DATA_LOCATION")
+        self.LOG_LOCATION = os.getenv("DAILY_READ_LOG_LOCATION")
         self.STHLM_STATUSDB_URL = os.getenv("DAILY_READ_STHLM_STATUSDB_URL")
         self.STHLM_STATUSDB_USERNAME = os.getenv("DAILY_READ_STHLM_STATUSDB_USERNAME")
         self.STHLM_STATUSDB_PASSWORD = os.getenv("DAILY_READ_STHLM_STATUSDB_PASSWORD")

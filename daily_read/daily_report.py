@@ -8,6 +8,9 @@ import os
 # installed
 import jinja2
 
+# Own
+import daily_read.utils
+
 log = logging.getLogger(__name__)
 
 
@@ -41,7 +44,7 @@ class DailyReport(object):
         """Populate report with values"""
         pull_date = f"{datetime.datetime.strptime(data['pull_date'], '%Y-%m-%d %H:%M:%S.%f').date()}"
         data["pull_date"] = pull_date
-
+        git_commits = daily_read.utils.get_git_commits()
         filled_report = self.template.render(
             pi_email=pi_email,
             data=data,
@@ -49,6 +52,7 @@ class DailyReport(object):
             icons=STATUS_ICONS,
             portal_url=PORTAL_URL,
             status_desc=STATUS_DESCRIPTIONS,
+            git_commits=git_commits,
         )
 
         if out_dir:

@@ -4,6 +4,8 @@
 # Standard
 import datetime
 import logging
+import logging.handlers
+import os
 import sys
 
 # Installed
@@ -17,16 +19,34 @@ import daily_read.config
 import daily_read.daily_report
 import daily_read.ngi_data
 import daily_read.order_portal
+import daily_read.utils
 
 
 dotenv.load_dotenv()
 config_values = daily_read.config.Config()
 
+rich_handler = RichHandler()
+rich_handler.setFormatter(logging.Formatter("%(message)s"))
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - Commit: %(commit)s - %(message)s"
+
+if not os.path.isabs(config_values.LOG_LOCATION):
+    raise ValueError(f"Log location is not an absolute path: {config_values.LOG_LOCATION}")
+
+if os.path.exists(config_values.LOG_LOCATION) and not os.path.isdir(config_values.LOG_LOCATION):
+    raise ValueError(f"Log Location exists but is not a directory: {config_values.LOG_LOCATION}")
+
+log_file = os.path.join(config_values.LOG_LOCATION, "DailyRead.log")
+
+rotating_file_handler = logging.handlers.RotatingFileHandler(
+    log_file, maxBytes=1024 * 1024 * 100, backupCount=5
+)  # 5 files of 100MB
+rotating_file_handler.addFilter(daily_read.utils.ContextFilter())
+
 
 logging.basicConfig(
     level="INFO",
-    format="%(message)s",
-    handlers=[RichHandler()],
+    format=LOG_FORMAT,
+    handlers=[rich_handler, rotating_file_handler],
 )
 
 log = logging.getLogger(__name__)
@@ -89,12 +109,16 @@ def generate_all(upload=False, develop=False):
         else:
             log.info("Saving report to disk instead of uploading")
             report = daily_rep.populate_and_write_report(
-                owner, modified_orders[owner], STATUS_PRIORITY, out_dir=config_values.REPORTS_LOCATION
+                owner,
+                modified_orders[owner],
+                STATUS_PRIORITY,
+                out_dir=config_values.REPORTS_LOCATION,
             )
 
 
 @generate.command(
-    name="single", help="Generate a report for a single project and save it locally. Mostly used for development"
+    name="single",
+    help="Generate a report for a single project and save it locally. Mostly used for development",
 )
 @click.option(
     "-p",
