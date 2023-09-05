@@ -34,6 +34,8 @@ class ProjectDataMaster(object):
 
         self.data = {}  # Key: Portal_id, Value: ProjectDataRecord
 
+        self.user_list = self._read_user_list(config.USERS_LIST_LOCATION)
+
     def __setup_data_repo(self):
         # Safety check of path
         if not os.path.isabs(self.data_location):
@@ -65,6 +67,15 @@ class ProjectDataMaster(object):
             data_repo.index.commit("Empty file as a first commit")
 
         return data_repo
+
+    def _read_user_list(self, users_list_location):
+        users_list = []
+        if users_list_location:
+            if os.path.exists(users_list_location):
+                with open(users_list_location, "r") as fh:
+                    users_list = [line.strip() for line in fh]
+
+        return users_list
 
     @property
     def staged_files(self):
@@ -134,7 +145,13 @@ class ProjectDataMaster(object):
          - Untracked files
 
         """
-        return any([self.data_repo.is_dirty(), self.data_repo.untracked_files, self.staged_files])
+        return any(
+            [
+                self.data_repo.is_dirty(),
+                self.data_repo.untracked_files,
+                self.staged_files,
+            ]
+        )
 
     def get_modified_or_new_projects(self):
         """Returns files which are either:
@@ -156,6 +173,7 @@ class ProjectDataMaster(object):
         projects.update(self.data_repo.untracked_files)
 
         projects_list = []
+
         for project_relpath in projects:
             portal_id = ProjectDataRecord.portal_id_from_path(project_relpath)
             if portal_id in self.data:
@@ -164,7 +182,12 @@ class ProjectDataMaster(object):
                 log.info(f"Data not fetched this time for {portal_id}, read data from file")
                 project_path = os.path.join(self.data_location, project_relpath)
 
-                orderer, project_dates, internal_id, internal_name = ProjectDataRecord.data_from_file(project_path)
+                (
+                    orderer,
+                    project_dates,
+                    internal_id,
+                    internal_name,
+                ) = ProjectDataRecord.data_from_file(project_path)
                 project_record = ProjectDataRecord(project_path, orderer, project_dates, internal_id, internal_name)
             projects_list.append(project_record)
 
@@ -174,7 +197,11 @@ class ProjectDataMaster(object):
         projects_list = self.get_modified_or_new_projects()
         orderers = set()
         for project in projects_list:
-            orderers.add(project.orderer)
+            if self.user_list:
+                if project.orderer in self.user_list:
+                    orderers.add(project.orderer)
+            else:
+                orderers.add(project.orderer)
 
         return orderers
 
@@ -200,7 +227,14 @@ class ProjectDataRecord(object):
         "None": 0,
     }
 
-    def __init__(self, relative_path, orderer, project_dates, internal_id=None, internal_name=None):
+    def __init__(
+        self,
+        relative_path,
+        orderer,
+        project_dates,
+        internal_id=None,
+        internal_name=None,
+    ):
         """relative_path: e.g. "NGIS/2023/NGI0002313.json" """
         node_year, file_name = os.path.split(relative_path)
         node, year = os.path.split(node_year)
