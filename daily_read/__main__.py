@@ -30,16 +30,10 @@ rich_handler.setFormatter(logging.Formatter("%(message)s"))
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - Commit: %(commit)s - %(message)s"
 
 if not os.path.isabs(config_values.LOG_LOCATION):
-    raise ValueError(
-        f"Log location is not an absolute path: {config_values.LOG_LOCATION}"
-    )
+    raise ValueError(f"Log location is not an absolute path: {config_values.LOG_LOCATION}")
 
-if os.path.exists(config_values.LOG_LOCATION) and not os.path.isdir(
-    config_values.LOG_LOCATION
-):
-    raise ValueError(
-        f"Log Location exists but is not a directory: {config_values.LOG_LOCATION}"
-    )
+if os.path.exists(config_values.LOG_LOCATION) and not os.path.isdir(config_values.LOG_LOCATION):
+    raise ValueError(f"Log Location exists but is not a directory: {config_values.LOG_LOCATION}")
 
 log_file = os.path.join(config_values.LOG_LOCATION, "DailyRead.log")
 
@@ -83,9 +77,7 @@ def generate():
 
 @generate.command(name="all")
 @click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
-@click.option(
-    "--develop", is_flag=True, help="Only generate max 5 reports, for dev purposes."
-)
+@click.option("--develop", is_flag=True, help="Only generate max 5 reports, for dev purposes.")
 def generate_all(upload=False, develop=False):
     # Fetch data from all sources (configurable)
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
@@ -111,9 +103,7 @@ def generate_all(upload=False, develop=False):
 
     for owner in modified_orders:
         if upload:
-            report = daily_rep.populate_and_write_report(
-                owner, modified_orders[owner], STATUS_PRIORITY
-            )
+            report = daily_rep.populate_and_write_report(owner, modified_orders[owner], STATUS_PRIORITY)
             for status in modified_orders[owner]["projects"].keys():
                 for project in modified_orders[owner]["projects"][status]:
                     op.upload_report_to_order_portal(report, project)
@@ -148,9 +138,7 @@ def generate_single(project, include_older=False):
     # Fetch all projects so that the report will look the same
     log.info("Fetching data from NGI sources")
     if include_older:
-        close_date = (datetime.datetime.now() - relativedelta(months=120)).strftime(
-            "%Y-%m-%d"
-        )
+        close_date = (datetime.datetime.now() - relativedelta(months=120)).strftime("%Y-%m-%d")
     else:
         close_date = None
 
