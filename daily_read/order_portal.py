@@ -73,14 +73,17 @@ class OrderPortal(object):
         older_than_cutoff = (pull_date - datetime.timedelta(days=closed_before_in_days)).date()
         for order in self.all_orders:
             # Skip projects closed some time ago or if data is not available
-            if (
-                order["status"] == "closed"
-                and datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date() >= older_than_cutoff
-            ):
-                continue
-            elif order["identifier"] not in self.projects_data.data.keys():
+            delete_report = False
+            if order["identifier"] not in self.projects_data.data.keys():
                 log.debug(f"Order portal id: {order['identifier']} not found in data fetched from sources")
                 continue
+            elif order["status"] == "closed":
+                # Add 2 day padding for deleting reports from closed projects
+                close_date = datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date()
+                if close_date < older_than_cutoff - datetime.timedelta(days=2):
+                    continue
+                elif close_date <= older_than_cutoff and close_date > older_than_cutoff - datetime.timedelta(days=2):
+                    delete_report = True
 
             proj_info = self.projects_data.data[order["identifier"]]
             if order["reports"]:
@@ -100,43 +103,52 @@ class OrderPortal(object):
                     "recents": {},
                     "events": [],
                     "projects": {},
+                    "delete_report_for": {},
                 }
 
             order_updates_item = order_updates[proj_info.orderer]
-            order_updates_item["events"] += proj_info.events
+            if delete_report:
+                order_updates_item["delete_report_for"].setdefault(proj_info.status, []).append(proj_info)
+            else:
+                order_updates_item["events"] += proj_info.events
 
-            # Sort the statuses based on date and priority of event and extract the 5 first (done repeatedly for each new project added)
+                # Sort the statuses based on date and priority of event and extract the 5 first (done repeatedly for each new project added)
 
-            def sorting_key(item):
-                """Outputs date and the priority label for the status."""
-                date, (status, _) = item
-                return date, priority[status]
+                def sorting_key(item):
+                    """Outputs date and the priority label for the status."""
+                    date, (status, _) = item
+                    return date, priority[status]
 
-            orderer_recents = sorted(order_updates_item["events"], reverse=True, key=sorting_key)[:5]
+                orderer_recents = sorted(order_updates_item["events"], reverse=True, key=sorting_key)[:5]
 
-            order_updates_item["recents"] = orderer_recents
-            order_updates_item["projects"].setdefault(proj_info.status, []).append(proj_info)
-            order_updates_item["active_projects"] += 1
+                order_updates_item["recents"] = orderer_recents
+                order_updates_item["projects"].setdefault(proj_info.status, []).append(proj_info)
+                order_updates_item["active_projects"] += 1
 
         return order_updates
 
-    def upload_report_to_order_portal(self, report, project):
-        """Upload report to order portal"""
+    def upload_report_to_order_portal(self, report, project, status):
+        """Upload report to order portal
+        With the status 'published' the user can see the report immediately
+        With the status 'review', the user will not be able to view the report(used here as a proxy for deletion)
+        """
         # Encoded to utf-8 to display special characters properly
         add_to_url = ""
         if project.report_iuid:
             add_to_url = f"/{project.report_iuid}"
         url = f"{self.base_url}/api/v1/report{add_to_url}"
+
         indata = dict(
             order=project.project_id,
             name="Project Progress",
-            status="published",
-            file=dict(
+            status=status,
+        )
+        if status == "published":
+            indata["file"] = dict(
                 data=base64.b64encode(report.encode()).decode("utf-8"),
                 filename="project_progress.html",
                 content_type="text/html",
-            ),
-        )
+            )
 
         # TODO: check Encoded to utf-8 to display special characters properly
         response = requests.post(url, headers=self.headers, json=indata)

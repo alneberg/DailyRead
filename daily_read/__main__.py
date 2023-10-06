@@ -104,9 +104,15 @@ def generate_all(upload=False, develop=False):
     for owner in modified_orders:
         if upload:
             report = daily_rep.populate_and_write_report(owner, modified_orders[owner], STATUS_PRIORITY)
+            # Publish reports
             for status in modified_orders[owner]["projects"].keys():
                 for project in modified_orders[owner]["projects"][status]:
-                    op.upload_report_to_order_portal(report, project)
+                    op.upload_report_to_order_portal(report, project, "published")
+            # Hide old reports
+            for status in modified_orders[owner]["delete_report_for"].keys():
+                for project in modified_orders[owner]["delete_report_for"][status]:
+                    op.upload_report_to_order_portal("", project, "review")
+
         else:
             log.info("Saving report to disk instead of uploading")
             report = daily_rep.populate_and_write_report(
