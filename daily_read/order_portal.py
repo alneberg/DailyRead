@@ -80,13 +80,13 @@ class OrderPortal(object):
             elif order["status"] == "closed":
                 # Add 2 day padding for deleting reports from closed projects
                 close_date = datetime.datetime.strptime(order["history"]["closed"], "%Y-%m-%d").date()
-                # Check if close date is older than 2 days from cutoff date. Then its report has already been hidden assuming
+                # Check if close date is older than 5 days from cutoff date. Then its report has already been hidden assuming
                 # DailyRead runs atleast daily, meaning it can be skipped
-                if close_date < older_than_cutoff - datetime.timedelta(days=2):
+                if close_date < older_than_cutoff - datetime.timedelta(days=5):
                     continue
-                # If the close date is equal to or within 2 days after cutoff date, the report should be hidden.
+                # If the close date is equal to or within 5 days after cutoff date, the report should be hidden.
                 # The delete_report flag is set to true to mark the order for report hiding
-                elif close_date <= older_than_cutoff and close_date > older_than_cutoff - datetime.timedelta(days=2):
+                elif close_date <= older_than_cutoff and close_date > older_than_cutoff - datetime.timedelta(days=5):
                     delete_report = True
 
             proj_info = self.projects_data.data[order["identifier"]]
