@@ -148,67 +148,77 @@
           </div>
         </div>
       </div>
+      {% if data["projects"]|length == 1 and None in data["projects"] %}
+      <div class="row justify-content-center p-5 m-3">
+        <div class="col-auto">No recorded activity at the time of report generation!</div>
+      </div>
+    {% else %}
       <div id="projects_list">
         {% for date_prio, date_type in priority | dictsort %}
-      <div class="row p-3">
-        <div class="col-sm border-end border-primary me-3 d-flex align-items-center" style="--bs-border-width: 15px;">
-          <div class="fs-1">
-            {{ date_type }}
-          </div>
-        </div>
-        <div class="col-sm projects-accordions">
-          {% for project in data["projects"][date_type] %}
-            <div class="accordion mb-1">
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button
-                    class="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#panel_project_{{ project.project_id }}"
-                    aria-expanded="false"
-                    aria-controls="panel_project_{{ project.project_id }}"
-                  >
-                    <h4 class="mb-0">{{ project.internal_name }}</h4>
-                  </button>
-                </h2>
-                <div id="panel_project_{{ project.project_id }}" class="accordion-collapse collapse">
-                  <div class="accordion-body pb-0">
-                    <p>
-                      Order Portal:
-                      <a target="_parent" href="{{ portal_url }}/order/{{ project.project_id }}">
-                        {{ project.project_id }}
-                      </a>
-                    </p>
-                    {% for date, statuses in project.project_dates | dictsort %}
-                      {% if project.project_dates[date] and project.project_dates[date] != "XXXX-XX-XX" %}
-                        <dl class="row ml-3">
-                          <dt class="list-group-item col-4">{{ date }}</dt>
-                          <dd class="list-group-item col-8">
-                            {% for status in statuses %}
-                              <i class="bi bi-{{ icons[status] }}"></i>
-                              <span style="padding-left: 0.5rem">{{ status }}</span>
-                              <i
-                                class="bi bi-patch-question px-1"
-                                data-bs-toggle="tooltip"
-                                data-bs-title="{{ status_desc[status] }}"
-                              ></i
-                              ><br />
-                            {% endfor %}
-                          </dd>
-                        </dl>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                </div>
+          <div class="row p-3">
+            <div
+              class="col-sm border-end border-primary me-3 d-flex align-items-center"
+              style="--bs-border-width: 15px;"
+            >
+              <div class="fs-1">
+                {{ date_type }}
               </div>
             </div>
-          {% endfor %}
-        </div>
+            <div class="col-sm projects-accordions">
+              {% for project in data["projects"][date_type] %}
+                <div class="accordion mb-1">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#panel_project_{{ project.project_id }}"
+                        aria-expanded="false"
+                        aria-controls="panel_project_{{ project.project_id }}"
+                      >
+                        <h4 class="mb-0">{{ project.internal_name }}</h4>
+                      </button>
+                    </h2>
+                    <div id="panel_project_{{ project.project_id }}" class="accordion-collapse collapse">
+                      <div class="accordion-body pb-0">
+                        <p>
+                          Order Portal:
+                          <a target="_parent" href="{{ portal_url }}/order/{{ project.project_id }}">
+                            {{ project.project_id }}
+                          </a>
+                        </p>
+                        {% for date, statuses in project.project_dates | dictsort %}
+                          {% if project.project_dates[date] and project.project_dates[date] != "XXXX-XX-XX" %}
+                            <dl class="row ml-3">
+                              <dt class="list-group-item col-4">{{ date }}</dt>
+                              <dd class="list-group-item col-8">
+                                {% for status in statuses %}
+                                  <i class="bi bi-{{ icons[status] }}"></i>
+                                  <span style="padding-left: 0.5rem">{{ status }}</span>
+                                  <i
+                                    class="bi bi-patch-question px-1"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-title="{{ status_desc[status] }}"
+                                  ></i
+                                  ><br />
+                                {% endfor %}
+                              </dd>
+                            </dl>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-      </div>
+    {% endif %}
       <div class="row border-top pt-3">
+        <p class="text-center" style="font-size: 0.8rem;"> Please note that there could be a delay of up to a few days between the actual event and its appearance in the report depending on the entry into our system and when this report is generated. </p>
         <p class="text-muted text-center" style="font-size: 0.8rem;">Created with DailyRead (commit <a class="text-reset" href="https://github.com/NationalGenomicsInfrastructure/DailyRead/tree/{{ git_commits["git_commit_full"] }}" target="_parent">{{ git_commits["git_commit"] }}</a>)</p>
       </div>
     </div>
