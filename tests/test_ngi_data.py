@@ -3,6 +3,7 @@ import os
 import dotenv
 import git
 import pytest
+import json
 
 from daily_read import ngi_data, config
 
@@ -15,7 +16,19 @@ def _create_all_files(file_list, data_location):
         file_path = os.path.join(data_location, file_relpath)
         os.makedirs(os.path.split(file_path)[0], exist_ok=True)
         with open(file_path, "w") as fh:
-            fh.write("Edits")
+            fh.write(
+                json.dumps(
+                    {
+                        "orderer": "dummy@dummy.se",
+                        "project_dates": {
+                            "2023-06-15": ["Samples Received"],
+                            "2023-06-28": ["Reception Control finished", "Library QC finished"],
+                        },
+                        "internal_id": "P123456",
+                        "internal_name": "D.Dummysson_23_01",
+                    }
+                )
+            )
 
 
 ####################################################### FIXTURES #########################################################
@@ -77,8 +90,11 @@ def data_repo_modified_not_staged(data_repo):
 
     for file_relpath in modified_not_staged_files:
         file_path = os.path.join(data_repo.working_dir, file_relpath)
-        with open(file_path, "a") as fh:
-            fh.write("More edits")
+        with open(file_path) as fh:
+            json_list = json.load(fh)
+        json_list["project_dates"].update({"2023-07-09": ["All Samples Sequenced"]})
+        with open(file_path, "w") as fh:
+            fh.write(json.dumps(json_list))
 
     return data_repo
 
@@ -93,8 +109,11 @@ def data_repo_modified_staged(data_repo):
 
     for file_relpath in modified_not_staged_files:
         file_path = os.path.join(data_repo.working_dir, file_relpath)
-        with open(file_path, "a") as fh:
-            fh.write("More edits")
+        with open(file_path) as fh:
+            json_list = json.load(fh)
+        json_list["project_dates"].update({"2023-07-09": ["All Samples Sequenced"]})
+        with open(file_path, "w") as fh:
+            fh.write(json.dumps(json_list))
 
     return data_repo
 
