@@ -16,3 +16,11 @@ class Config(object):
         self.FETCH_FROM_NGIS = os.getenv("DAILY_READ_FETCH_FROM_NGIS")
         self.FETCH_FROM_SNPSEQ = os.getenv("DAILY_READ_FETCH_FROM_SNPSEQ")
         self.FETCH_FROM_UGC = os.getenv("DAILY_READ_FETCH_FROM_UGC")
+        self.STATUS_PRIORITY = {
+            1: "Samples Received",
+            2: "Reception Control finished",
+            3: "Library QC finished",
+            4: "All Samples Sequenced",
+            5: "All Raw data Delivered",
+        }
+        self.STATUS_PRIORITY_REV = {v: k for k, v in self.STATUS_PRIORITY.items()}

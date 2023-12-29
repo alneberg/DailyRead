@@ -6,7 +6,6 @@ from unittest import mock
 from conftest import mocked_requests_get
 
 from daily_read import order_portal, config, ngi_data
-from daily_read.__main__ import STATUS_PRIORITY_REV
 
 dotenv.load_dotenv()
 
@@ -43,7 +42,7 @@ def test_get_and_process_orders_open(data_repo_full, mock_project_data_record):
         op.get_orders(orderer=orderer)
 
     assert op.all_orders[0]["identifier"] == order_id
-    modified_orders = op.process_orders(STATUS_PRIORITY_REV)
+    modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     assert modified_orders[orderer]["projects"]["Library QC finished"][0] == data_master.data[order_id]
 
 
@@ -60,7 +59,7 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record)
         op.get_orders(orderer=orderer)
 
     assert op.all_orders[1]["identifier"] == order_id
-    modified_orders = op.process_orders(STATUS_PRIORITY_REV)
+    modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     assert modified_orders[orderer]["delete_report_for"]["All Raw data Delivered"][0] == data_master.data[order_id]
 
 
@@ -78,5 +77,5 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
 
     assert op.all_orders[2]["identifier"] == order_id
     with pytest.raises(ValueError) as err:
-        op.process_orders(STATUS_PRIORITY_REV)
+        op.process_orders(config_values.STATUS_PRIORITY_REV)
         assert err.value == f"Multiple reports for Project Progress found in the Order Portal for order {order_id}"

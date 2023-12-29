@@ -52,17 +52,6 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-STATUS_PRIORITY = {
-    1: "Samples Received",
-    2: "Reception Control finished",
-    3: "Library QC finished",
-    4: "All Samples Sequenced",
-    5: "All Raw data Delivered",
-}
-
-STATUS_PRIORITY_REV = {v: k for k, v in STATUS_PRIORITY.items()}
-
-
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 def daily_read_cli():
     pass
@@ -98,12 +87,12 @@ def generate_all(upload=False, develop=False):
             nr_orderers += 1
         if nr_orderers > 4 and develop:
             break
-    modified_orders = op.process_orders(STATUS_PRIORITY_REV)
+    modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner in modified_orders:
         if upload:
-            report = daily_rep.populate_and_write_report(owner, modified_orders[owner], STATUS_PRIORITY)
+            report = daily_rep.populate_and_write_report(owner, modified_orders[owner], config_values.STATUS_PRIORITY)
             # Publish reports
             for status in modified_orders[owner]["projects"].keys():
                 for project in modified_orders[owner]["projects"][status]:
@@ -118,7 +107,7 @@ def generate_all(upload=False, develop=False):
             report = daily_rep.populate_and_write_report(
                 owner,
                 modified_orders[owner],
-                STATUS_PRIORITY,
+                config_values.STATUS_PRIORITY,
                 out_dir=config_values.REPORTS_LOCATION,
             )
 
@@ -165,12 +154,12 @@ def generate_single(project, include_older=False):
         sys.exit(1)
 
     op.get_orders(orderer=orderer)
-    filtered_orders = op.process_orders(STATUS_PRIORITY_REV)
+    filtered_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     daily_rep = daily_read.daily_report.DailyReport()
 
     for owner, owner_orders in filtered_orders.items():
         _ = daily_rep.populate_and_write_report(
-            owner, owner_orders, STATUS_PRIORITY, out_dir=config_values.REPORTS_LOCATION
+            owner, owner_orders, config_values.STATUS_PRIORITY, out_dir=config_values.REPORTS_LOCATION
         )
 
     log.info(f"Wrote report to {config_values.REPORTS_LOCATION}")
