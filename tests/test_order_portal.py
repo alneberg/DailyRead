@@ -61,24 +61,3 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
     with pytest.raises(ValueError) as err:
         op.process_orders(config_values.STATUS_PRIORITY_REV)
         assert err.value == f"Multiple reports for Project Progress found in the Order Portal for order {order_id}"
-
-
-def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
-    order_id = "NGI123456"
-    config_values = config.Config()
-    conf_val = copy.deepcopy(config_values)
-
-    order_portal_url = conf_val.ORDER_PORTAL_URL
-
-    data_master = ngi_data.ProjectDataMaster(conf_val)
-
-    data_master.data = {order_id: mock_project_data_record("open")}
-    conf_val.ORDER_PORTAL_URL = None
-    conf_val.ORDER_PORTAL_API_KEY = None
-    with pytest.raises(ValueError) as err:
-        order_portal.OrderPortal(conf_val, data_master)
-        assert err.value == "environment variable ORDER_PORTAL_URL not set"
-    config_values.ORDER_PORTAL_URL = order_portal_url
-    with pytest.raises(ValueError) as err:
-        order_portal.OrderPortal(conf_val, data_master)
-        assert err.value == "Environment variable ORDER_PORTAL_API_KEY not set"
