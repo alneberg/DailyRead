@@ -20,4 +20,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install pytest pytest-cov
-          pytest --cov=daily_read tests/
+          python -m pytest --cov=daily_read tests/
