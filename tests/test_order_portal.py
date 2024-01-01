@@ -4,7 +4,6 @@ import dotenv
 import pytest
 from unittest import mock
 from conftest import mocked_requests_get
-import copy
 
 from daily_read import order_portal, config, ngi_data
 
@@ -15,7 +14,8 @@ def test_get_and_process_orders_open(data_repo_full, mock_project_data_record):
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     data_master.data = {order_id: mock_project_data_record("open")}
 
@@ -32,7 +32,8 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record)
     orderer = "dummy@dummy.se"
     order_id = "NGI123455"
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     data_master.data = {order_id: mock_project_data_record("closed")}
 
@@ -49,7 +50,8 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
     orderer = "dummy@dummy.se"
     order_id = "NGI123454"
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     data_master.data = {order_id: mock_project_data_record("open")}
 
@@ -68,8 +70,8 @@ def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
     config_values = config.Config()
 
     order_portal_url = config_values.ORDER_PORTAL_URL
-
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     data_master.data = {order_id: mock_project_data_record("open")}
     config_values.ORDER_PORTAL_URL = None

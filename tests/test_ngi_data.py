@@ -26,7 +26,8 @@ def test_create_project_data_master(data_repo_full):
 def test_create_project_data_master_no_commit(data_repo_no_commit):
     """With existing git repo but without commits, test creation of a ProjectDataMaster class"""
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert len(data_master.sources) == 3
     assert data_master.source_names == ["NGI Stockholm", "SNP&SEQ", "Uppsala Genome Center"]
@@ -38,7 +39,8 @@ def test_create_project_data_master_no_commit(data_repo_no_commit):
 
 def test_modified_or_new_no_commit(data_repo_no_commit):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert not data_master.any_modified_or_new()
 
@@ -49,7 +51,8 @@ def test_modified_or_new_no_commit(data_repo_no_commit):
 
 def test_modified_or_new(data_repo_full):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
@@ -73,7 +76,8 @@ def test_modified_or_new_untracked(data_repo_untracked):
 
 def test_modified_or_new_staged(data_repo_new_staged):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
@@ -86,7 +90,8 @@ def test_modified_or_new_staged(data_repo_new_staged):
 
 def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
@@ -99,7 +104,8 @@ def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
 
 def test_modified_or_new_modified_staged(data_repo_modified_staged):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
@@ -112,7 +118,8 @@ def test_modified_or_new_modified_staged(data_repo_modified_staged):
 
 def test_modified_or_new_tracked(data_repo_tracked):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert not data_master.any_modified_or_new()
 
