@@ -63,7 +63,8 @@ def test_modified_or_new(data_repo_full):
 
 def test_modified_or_new_untracked(data_repo_untracked):
     config_values = config.Config()
-    data_master = ngi_data.ProjectDataMaster(config_values)
+    with patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
 
