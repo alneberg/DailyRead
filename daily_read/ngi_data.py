@@ -340,7 +340,7 @@ class StockholmProjectData(object):
             if close_date is None:
                 close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
             for row in self.statusdb_session.rows(close_date=close_date):
-                order_year = "2023"  # TODO - get order year from data
+                order_year = row.value["order_year"]
                 portal_id = row.value["portal_id"]
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
 
