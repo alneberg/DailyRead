@@ -213,7 +213,13 @@ def data_repo_untracked(data_repo):
 @pytest.fixture
 def data_repo_new_staged(data_repo):
     """Adds two new files to the index to be committed."""
-    staged_files = ["NGIS/2023/staged_file1.json", "UGC/2023/staged_file2.json", "NGIS/2023/staged_file2.json"]
+    staged_files = [
+        "NGIS/2023/staged_file1.json",
+        "UGC/2023/staged_file2.json",
+        "NGIS/2023/staged_file2.json",
+        "NGIS/2023/P123456.json",
+        "NGIS/2023/P123453.json",
+    ]
     _create_all_files(staged_files, data_repo.working_dir)
     data_repo.index.add(staged_files)
 
@@ -294,7 +300,7 @@ def mock_project_data_record():
     def _method(status):
         if status == "open":
             mock_record = ngi_data.ProjectDataRecord(
-                "NGIS/2023/staged_file1.json",
+                "NGIS/2023/NGI123456.json",
                 dummy_order_open["orderer"],
                 dummy_order_open["project_dates"],
                 dummy_order_open["internal_id"],
@@ -307,6 +313,14 @@ def mock_project_data_record():
                 dummy_order_closed["project_dates"],
                 dummy_order_closed["internal_id"],
                 dummy_order_closed["internal_name"],
+            )
+        if status == "open_with_report":
+            mock_record = ngi_data.ProjectDataRecord(
+                "NGIS/2023/NGI123453.json",
+                dummy_order_open["orderer"],
+                dummy_order_open["project_dates"],
+                dummy_order_open["internal_id"],
+                dummy_order_open["internal_name"],
             )
         return mock_record
 

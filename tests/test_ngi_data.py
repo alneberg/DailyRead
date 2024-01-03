@@ -58,7 +58,7 @@ def test_modified_or_new(data_repo_full):
 
     modified_or_new = data_master.get_modified_or_new_projects()
     file_names = [project.relative_path for project in modified_or_new]
-    assert len(set(file_names)) == 9
+    assert len(set(file_names)) == 11
 
 
 def test_modified_or_new_untracked(data_repo_untracked):
@@ -84,9 +84,8 @@ def test_modified_or_new_staged(data_repo_new_staged):
 
     modified_or_new = data_master.get_modified_or_new_projects()
     file_names = [project.relative_path for project in modified_or_new]
-    assert len(set(file_names)) == 3
-
-    assert "staged_file" in file_names[0]
+    assert len(set(file_names)) == 5
+    assert "staged_file" in file_names[3]
 
 
 def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
