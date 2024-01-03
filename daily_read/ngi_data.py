@@ -361,7 +361,7 @@ class StockholmProjectData(object):
         rows = self.statusdb_session.rows(close_date=close_date)
         for row in rows:
             if row.value["portal_id"] == project_id:
-                order_year = "2023"  # TODO - get order year from data
+                order_year = row.value["order_year"]
                 portal_id = row.value["portal_id"]
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
                 self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
