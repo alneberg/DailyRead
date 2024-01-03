@@ -1,7 +1,7 @@
 import os
 
 import dotenv
-from unittest.mock import patch, PropertyMock
+from unittest import mock
 
 from daily_read import ngi_data, config
 
@@ -14,7 +14,7 @@ dotenv.load_dotenv()
 def test_create_project_data_master(data_repo_full):
     """With existing git repo, test creation of a ProjectDataMaster class"""
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert len(data_master.sources) == 3
@@ -26,7 +26,7 @@ def test_create_project_data_master(data_repo_full):
 def test_create_project_data_master_no_commit(data_repo_no_commit):
     """With existing git repo but without commits, test creation of a ProjectDataMaster class"""
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert len(data_master.sources) == 3
@@ -39,7 +39,7 @@ def test_create_project_data_master_no_commit(data_repo_no_commit):
 
 def test_modified_or_new_no_commit(data_repo_no_commit):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert not data_master.any_modified_or_new()
@@ -51,7 +51,7 @@ def test_modified_or_new_no_commit(data_repo_no_commit):
 
 def test_modified_or_new(data_repo_full):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
@@ -63,7 +63,7 @@ def test_modified_or_new(data_repo_full):
 
 def test_modified_or_new_untracked(data_repo_untracked):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
@@ -77,7 +77,7 @@ def test_modified_or_new_untracked(data_repo_untracked):
 
 def test_modified_or_new_staged(data_repo_new_staged):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
@@ -91,7 +91,7 @@ def test_modified_or_new_staged(data_repo_new_staged):
 
 def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
@@ -105,7 +105,7 @@ def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
 
 def test_modified_or_new_modified_staged(data_repo_modified_staged):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert data_master.any_modified_or_new()
@@ -119,7 +119,7 @@ def test_modified_or_new_modified_staged(data_repo_modified_staged):
 
 def test_modified_or_new_tracked(data_repo_tracked):
     config_values = config.Config()
-    with patch("daily_read.statusdb.StatusDBSession"):
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
     assert not data_master.any_modified_or_new()

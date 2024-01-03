@@ -74,6 +74,22 @@ order_portal_resp_order_processing = {
     },
 }
 
+order_portal_resp_order_processing_single_report = copy.deepcopy(order_portal_resp_order_processing)
+order_portal_resp_order_processing_single_report["identifier"] = "NGI123453"
+order_portal_resp_order_processing_single_report["reports"] = [
+    {
+        "iuid": "c5ee942",
+        "name": "Project Progress",
+        "filename": "project_progress.html",
+        "status": "published",
+        "modified": "2023-12-28T15:09:18.732Z",
+        "links": {
+            "api": {"href": "https://orderportal.example.com/orders/api/v1/report/c5ee942"},
+            "file": {"href": "https://orderportal.example.com/orders/report/c5ee942"},
+        },
+    },
+]
+
 order_portal_resp_order_processing_mult_reports = copy.deepcopy(order_portal_resp_order_processing)
 
 order_portal_resp_order_processing_mult_reports["identifier"] = "NGI123454"
@@ -297,6 +313,13 @@ def mock_project_data_record():
     return _method
 
 
+@pytest.fixture
+def create_report_path(tmp_path):
+    os.environ["DAILY_READ_REPORTS_LOCATION"] = os.path.join(tmp_path, os.environ["DAILY_READ_REPORTS_LOCATION"])
+    os.makedirs(os.environ["DAILY_READ_REPORTS_LOCATION"])
+    return create_report_path
+
+
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
         def __init__(self, json_data, status_code):
@@ -313,6 +336,7 @@ def mocked_requests_get(*args, **kwargs):
                     order_portal_resp_order_processing,
                     order_portal_resp_order_closed,
                     order_portal_resp_order_processing_mult_reports,
+                    order_portal_resp_order_processing_single_report,
                 ]
             },
             200,

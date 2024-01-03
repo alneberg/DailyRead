@@ -1,5 +1,3 @@
-import os
-
 import dotenv
 import pytest
 from unittest import mock
@@ -10,7 +8,8 @@ from daily_read import order_portal, config, ngi_data
 dotenv.load_dotenv()
 
 
-def test_get_and_process_orders_open(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record):
+    """Test getting and processing an open order and uploading its Project progress report"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
     config_values = config.Config()
@@ -26,9 +25,39 @@ def test_get_and_process_orders_open(data_repo_full, mock_project_data_record):
     assert op.all_orders[0]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     assert modified_orders[orderer]["projects"]["Library QC finished"][0] == data_master.data[order_id]
+    with mock.patch("daily_read.order_portal.requests.post") as mock_post:
+        mock_post.return_value.status_code = 200
+        op.upload_report_to_order_portal(
+            "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
+        )
+
+
+def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock_project_data_record):
+    """Test getting and processing an open order with an existing Project progress report"""
+    orderer = "dummy@dummy.se"
+    order_id = "NGI123453"
+    config_values = config.Config()
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
+
+    data_master.data = {order_id: mock_project_data_record("open")}
+
+    op = order_portal.OrderPortal(config_values, data_master)
+    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
+        op.get_orders(orderer=orderer)
+
+    assert op.all_orders[3]["identifier"] == order_id
+    modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
+    assert modified_orders[orderer]["projects"]["Library QC finished"][0] == data_master.data[order_id]
+    with mock.patch("daily_read.order_portal.requests.post") as mock_post:
+        mock_post.return_value.status_code = 200
+        op.upload_report_to_order_portal(
+            "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
+        )
 
 
 def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record):
+    """Test getting and processing an order closed within the timeframe of Project progress report deletion"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123455"
     config_values = config.Config()
@@ -47,6 +76,7 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record)
 
 
 def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_record):
+    """Test getting and processing orders with multiple Project progress reports"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123454"
     config_values = config.Config()
@@ -66,6 +96,7 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
 
 
 def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
+    """Test the conditions when environment variables ORDER_PORTAL_URL and ORDER_PORTAL_API_KEY are not set"""
     order_id = "NGI123456"
     config_values = config.Config()
 
