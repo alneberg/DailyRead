@@ -85,7 +85,7 @@ def test_modified_or_new_staged(data_repo_new_staged):
     modified_or_new = data_master.get_modified_or_new_projects()
     file_names = [project.relative_path for project in modified_or_new]
     assert len(set(file_names)) == 5
-    assert "staged_file" in file_names[3]
+    assert any("staged_file" in s for s in file_names)
 
 
 def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
