@@ -1,9 +1,9 @@
-import dotenv
 import datetime
+import dotenv
 import os
-from unittest import mock
-from conftest import mocked_requests_get
 
+from conftest import mocked_requests_get
+from unittest import mock
 
 from daily_read import daily_report, config, ngi_data, order_portal
 
