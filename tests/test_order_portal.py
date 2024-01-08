@@ -1,8 +1,9 @@
+import base64
 import dotenv
 import pytest
-from unittest import mock
+
 from conftest import mocked_requests_get
-import base64
+from unittest import mock
 
 from daily_read import order_portal, config, ngi_data
 
@@ -119,9 +120,10 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
         op.get_orders(orderer=orderer)
 
     assert op.all_orders[2]["identifier"] == order_id
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(
+        ValueError, match=f"Multiple reports for Project Progress found in the Order Portal for order {order_id}"
+    ) as err:
         op.process_orders(config_values.STATUS_PRIORITY_REV)
-        assert err.value == f"Multiple reports for Project Progress found in the Order Portal for order {order_id}"
 
 
 def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
@@ -137,13 +139,11 @@ def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
     data_master.data = {order_id: mock_project_data_record("open")}
     config_values.ORDER_PORTAL_URL = None
     config_values.ORDER_PORTAL_API_KEY = None
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError, match="environment variable ORDER_PORTAL_URL not set") as err:
         order_portal.OrderPortal(config_values, data_master)
-        assert err.value == "environment variable ORDER_PORTAL_URL not set"
     config_values.ORDER_PORTAL_URL = order_portal_url
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError, match="Environment variable ORDER_PORTAL_API_KEY not set") as err:
         order_portal.OrderPortal(config_values, data_master)
-        assert err.value == "Environment variable ORDER_PORTAL_API_KEY not set"
 
     config_values.ORDER_PORTAL_API_KEY = api_key
     config_values.ORDER_PORTAL_URL = order_portal_url.rstrip("/")

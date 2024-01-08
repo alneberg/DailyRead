@@ -128,7 +128,7 @@ class ProjectDataMaster(object):
 
             abs_path = os.path.join(self.data_location, project_record.relative_path)
             if os.path.dirname(abs_path) != source_year_dir:  # This should really never happen
-                raise ValueError(f"Error with paths, dirname of {abs_path} should be {year_dir}")
+                raise ValueError(f"Error with paths, dirname of {abs_path} should be {source_year_dir}")
 
             with open(abs_path, mode="w") as fh:
                 log.debug(f"Writing data for {project_record.project_id} to {abs_path}")
@@ -188,7 +188,9 @@ class ProjectDataMaster(object):
                     internal_id,
                     internal_name,
                 ) = ProjectDataRecord.data_from_file(project_path)
-                project_record = ProjectDataRecord(project_path, orderer, project_dates, internal_id, internal_name)
+                project_record = ProjectDataRecord(
+                    project_path, orderer, project_dates, internal_id, internal_name, self.config.STATUS_PRIORITY_REV
+                )
             projects_list.append(project_record)
 
         return projects_list
@@ -218,23 +220,7 @@ class ProjectDataRecord(object):
     Raises ValueError if orderer is not present in data, if data is given
     """
 
-    dates_prio = {
-        "All Raw data Delivered": 5,
-        "All Samples Sequenced": 4,
-        "Library QC finished": 3,
-        "Reception Control finished": 2,
-        "Samples Received": 1,
-        "None": 0,
-    }
-
-    def __init__(
-        self,
-        relative_path,
-        orderer,
-        project_dates,
-        internal_id=None,
-        internal_name=None,
-    ):
+    def __init__(self, relative_path, orderer, project_dates, internal_id=None, internal_name=None, dates_prio=None):
         """relative_path: e.g. "NGIS/2023/NGI0002313.json" """
         node_year, file_name = os.path.split(relative_path)
         node, year = os.path.split(node_year)
@@ -268,7 +254,7 @@ class ProjectDataRecord(object):
 
             # If multiple statuses for the same date, choose the one with highest prio
             if len(latest_statuses) > 1:
-                self.status = sorted(latest_statuses, key=lambda s: self.dates_prio[s], reverse=True)[0]
+                self.status = sorted(latest_statuses, key=lambda s: dates_prio[s], reverse=True)[0]
             else:
                 self.status = latest_statuses[0]
         else:
@@ -326,6 +312,7 @@ class StockholmProjectData(object):
         self.name = "NGI Stockholm"
         self.dirname = "NGIS"
         self.statusdb_session = statusdb.StatusDBSession(config)
+        self.dates_prio = config.STATUS_PRIORITY_REV
 
     def get_data(self, project_id=None, close_date=None):
         """Fetch data from Stockholm StatusDB.
@@ -350,7 +337,7 @@ class StockholmProjectData(object):
                 internal_name = row.value["project_name"]
 
                 self.data[portal_id] = ProjectDataRecord(
-                    relative_path, orderer, project_dates, internal_id, internal_name
+                    relative_path, orderer, project_dates, internal_id, internal_name, self.dates_prio
                 )
 
         return self.data
@@ -364,7 +351,15 @@ class StockholmProjectData(object):
                 order_year = row.value["order_year"]
                 portal_id = row.value["portal_id"]
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
-                self.data[portal_id] = ProjectDataRecord(relative_path, data=row.value)
+
+                project_dates = row.value["proj_dates"]
+                orderer = row.value["orderer"]
+                internal_id = row.value["project_id"]
+                internal_name = row.value["project_name"]
+
+                self.data[portal_id] = ProjectDataRecord(
+                    relative_path, orderer, project_dates, internal_id, internal_name, self.dates_prio
+                )
                 return
         raise ValueError(f"Project {project_id} not found in statusdb")
 
@@ -376,8 +371,8 @@ class SNPSEQProjectData(object):
         self.name = "SNP&SEQ"
         self.dirname = "SNPSEQ"
 
-    def get_data(self, project_id=None):
-        pass
+    def get_data(self, project_id=None, close_date=None):
+        return {}
 
 
 class UGCProjectData(object):
@@ -387,5 +382,5 @@ class UGCProjectData(object):
         self.name = "Uppsala Genome Center"
         self.dirname = "UGC"
 
-    def get_data(self, project_id=None):
-        pass
+    def get_data(self, project_id=None, close_date=None):
+        return {}
