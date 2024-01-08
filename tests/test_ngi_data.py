@@ -208,7 +208,7 @@ def test_data_loc_not_dir(tmp_path):
     temp_file = tmp_path / "test_file.txt"
     temp_file.write_text("test")
     config_values.DATA_LOCATION = temp_file
-    with mock.patch("daily_read.statusdb.StatusDBSession") and pytest.raises(
+    with mock.patch("daily_read.ngi_data.statusdb.StatusDBSession") and pytest.raises(
         ValueError, match=f"Data Location exists but is not a directory: {config_values.DATA_LOCATION}"
     ) as err:
         ngi_data.ProjectDataMaster(config_values)
