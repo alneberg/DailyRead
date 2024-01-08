@@ -1,11 +1,13 @@
+import copy
+import couchdb
 import git
+import json
 import os
 import pytest
-import json
-from daily_read import ngi_data
-from datetime import date, timedelta
-import copy
 
+from datetime import date, timedelta
+
+from daily_read import ngi_data, config
 
 dummy_order_open = {
     "orderer": "dummy@dummy.se",
@@ -25,8 +27,8 @@ dummy_order_closed = {
         "2023-07-28": ["All Samples Sequenced"],
         "2023-07-29": ["All Raw data Delivered"],
     },
-    "internal_id": "P123456",
-    "internal_name": "D.Dummysson_23_01",
+    "internal_id": "P123455",
+    "internal_name": "D.Dummysson_23_02",
 }
 
 order_portal_resp_order_processing = {
@@ -159,7 +161,7 @@ order_portal_resp_order_closed = {
     "fields": {
         "assigned_node": "Stockholm",
         "project_ngi_identifier": "P123455",
-        "project_ngi_name": "D.Dummysson_23_01",
+        "project_ngi_name": "D.Dummysson_23_02",
     },
 }
 
@@ -298,6 +300,7 @@ def data_repo_full(
 @pytest.fixture
 def mock_project_data_record():
     def _method(status):
+        config_values = config.Config()
         if status == "open":
             mock_record = ngi_data.ProjectDataRecord(
                 "NGIS/2023/NGI123456.json",
@@ -305,6 +308,7 @@ def mock_project_data_record():
                 dummy_order_open["project_dates"],
                 dummy_order_open["internal_id"],
                 dummy_order_open["internal_name"],
+                config_values.STATUS_PRIORITY_REV,
             )
         if status == "closed":
             mock_record = ngi_data.ProjectDataRecord(
@@ -313,6 +317,7 @@ def mock_project_data_record():
                 dummy_order_closed["project_dates"],
                 dummy_order_closed["internal_id"],
                 dummy_order_closed["internal_name"],
+                config_values.STATUS_PRIORITY_REV,
             )
         if status == "open_with_report":
             mock_record = ngi_data.ProjectDataRecord(
@@ -321,6 +326,7 @@ def mock_project_data_record():
                 dummy_order_open["project_dates"],
                 dummy_order_open["internal_id"],
                 dummy_order_open["internal_name"],
+                config_values.STATUS_PRIORITY_REV,
             )
         return mock_record
 
@@ -357,3 +363,43 @@ def mocked_requests_get(*args, **kwargs):
         )
 
     return MockResponse(None, 404)
+
+
+@pytest.fixture
+def mocked_statusdb_conn_rows():
+    """To substitute return value for the daily_read.statusdb.StatusDBSession.rows method"""
+    row1 = couchdb.client.Row(
+        id="b77d4f",
+        key=["XXXX-XX-XX", "P123457"],
+        value={
+            "orderer": "dummy@dummy.se",
+            "portal_id": "NGI123457",
+            "order_year": "2023",
+            "project_id": "P123457",
+            "project_name": "D.Dummysson_23_03",
+            "proj_dates": {
+                "2023-06-15": ["Samples Received"],
+                "2023-06-28": ["Reception Control finished", "Library QC finished"],
+            },
+            "status": "Ongoing",
+        },
+    )
+    row2 = couchdb.client.Row(
+        id="b77d4g",
+        key=[(date.today() - timedelta(days=31)).strftime("%Y-%m-%d"), "P123458"],
+        value={
+            "orderer": "test@dummy.se",
+            "portal_id": "NGI123458",
+            "order_year": "2023",
+            "project_id": "P123458",
+            "project_name": "T.Dummysson_23_04",
+            "proj_dates": {
+                "2023-06-15": ["Samples Received"],
+                "2023-06-28": ["Reception Control finished", "Library QC finished"],
+                "2023-07-28": ["All Samples Sequenced"],
+                "2023-07-29": ["All Raw data Delivered"],
+            },
+            "status": "Closed",
+        },
+    )
+    return [row1, row2]
