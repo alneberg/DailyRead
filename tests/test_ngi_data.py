@@ -193,7 +193,7 @@ def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows
 
 
 @mock.patch("daily_read.statusdb.StatusDBSession")
-def test_data_loc_not_abs():
+def test_data_loc_not_abs(mock_status):
     """Test error thrown when given data location is not an absolute path"""
     config_values = config.Config()
     config_values.DATA_LOCATION = "tests/test_data_location"
@@ -204,7 +204,7 @@ def test_data_loc_not_abs():
 
 
 @mock.patch("daily_read.statusdb.StatusDBSession")
-def test_data_loc_not_dir(tmp_path):
+def test_data_loc_not_dir(mock_status, tmp_path):
     """Test error thrown when data location is not a directory"""
     config_values = config.Config()
     temp_file = tmp_path / "test_file.txt"
@@ -213,7 +213,6 @@ def test_data_loc_not_dir(tmp_path):
     with pytest.raises(
         ValueError, match=f"Data Location exists but is not a directory: {config_values.DATA_LOCATION}"
     ) as err:
-        print("hi")
         ngi_data.ProjectDataMaster(config_values)
 
 
