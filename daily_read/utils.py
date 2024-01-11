@@ -30,3 +30,18 @@ def get_git_commits():
         git_commits["git_commit"] = "unknown"
         git_commits["git_commit_full"] = "unknown"
     return git_commits
+
+
+# Rudimentary Error reporting
+def error_reporting(log):
+    import sys
+
+    sys.tracebacklimit = 0
+    error_string = ""
+    for child in log.root.manager.loggerDict:
+        if "daily_read" in child:
+            cache = log.root.getChild(child)._cache
+            if 40 in cache and cache[40]:
+                error_string += f"\nErrors logged in {child} during execution"
+    if error_string:
+        raise RuntimeError(error_string)
