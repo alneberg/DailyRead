@@ -402,4 +402,17 @@ def mocked_statusdb_conn_rows():
             "status": "Closed",
         },
     )
-    return [row1, row2]
+    row3 = couchdb.client.Row(
+        id="b77d4d",
+        key=["XXXX-XX-XX", "P123460"],
+        value={
+            "orderer": "dummy@dummy.se",
+            "portal_id": "NGI123460",
+            "order_year": "",
+            "project_id": "P123460",
+            "project_name": "D.Dummysson_23_06",
+            "proj_dates": {},
+            "status": "Pending",
+        },
+    )
+    return [row1, row2, row3]
