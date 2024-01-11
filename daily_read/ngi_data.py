@@ -360,7 +360,7 @@ class StockholmProjectData(object):
                 # Should not happen, upstream manual entry error if it happens
                 if not order_year:
                     log.error(f"No order year found for order {portal_id}, skipping it!")
-                    continue
+                    return
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
 
                 project_dates = row.value["proj_dates"]

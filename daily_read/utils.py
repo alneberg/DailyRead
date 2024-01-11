@@ -34,9 +34,6 @@ def get_git_commits():
 
 # Rudimentary Error reporting
 def error_reporting(log):
-    import sys
-
-    sys.tracebacklimit = 0
     error_string = ""
     for child in log.root.manager.loggerDict:
         if "daily_read" in child:
@@ -44,4 +41,5 @@ def error_reporting(log):
             if 40 in cache and cache[40]:
                 error_string += f"\nErrors logged in {child} during execution"
     if error_string:
+        sys.tracebacklimit = 0
         raise RuntimeError(error_string)
