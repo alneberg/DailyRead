@@ -10,17 +10,13 @@ log = logging.getLogger(__name__)
 
 class StatusDBSession(object):
     def __init__(self, config):
-        url_string = "https://{}:{}@{}".format(
-            config.STHLM_STATUSDB_USERNAME,
-            config.STHLM_STATUSDB_PASSWORD,
-            config.STHLM_STATUSDB_URL,
+        url_string = (
+            f"https://{config.STHLM_STATUSDB_USERNAME}:{config.STHLM_STATUSDB_PASSWORD}@{config.STHLM_STATUSDB_URL}"
         )
-        display_url_string = "https://{}:{}@{}".format(
-            config.STHLM_STATUSDB_USERNAME, "*********", config.STHLM_STATUSDB_URL
-        )
+        display_url_string = f"https://{config.STHLM_STATUSDB_USERNAME}:*********@{config.STHLM_STATUSDB_URL}"
         self.connection = couchdb.Server(url=url_string)
         if not self.connection:
-            raise Exception("Couchdb connection failed for url {}".format(display_url_string))
+            raise ConnectionError(f"Couchdb connection failed for url {display_url_string}")
         self.db_connection = self.connection["projects"]
 
         self.projdates_view = self.db_connection.view(
