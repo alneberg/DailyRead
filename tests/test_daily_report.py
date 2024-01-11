@@ -1,13 +1,10 @@
 import datetime
-import dotenv
 import os
 
 from conftest import mocked_requests_get
 from unittest import mock
 
 from daily_read import daily_report, config, ngi_data, order_portal
-
-dotenv.load_dotenv()
 
 
 def test_write_report_to_out_dir(data_repo_full, mock_project_data_record, create_report_path):

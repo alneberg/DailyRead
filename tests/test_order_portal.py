@@ -1,13 +1,10 @@
 import base64
-import dotenv
 import pytest
 
 from conftest import mocked_requests_get
 from unittest import mock
 
 from daily_read import order_portal, config, ngi_data
-
-dotenv.load_dotenv()
 
 
 def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record):
