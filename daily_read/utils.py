@@ -30,3 +30,20 @@ def get_git_commits():
         git_commits["git_commit"] = "unknown"
         git_commits["git_commit_full"] = "unknown"
     return git_commits
+
+
+# Rudimentary Error reporting
+def error_reporting(log, module="all"):
+    """Raise an error if there are Error level messages in the daily_read module logs"""
+    error_string = ""
+    if module == "all":
+        module = "daily_read"
+    for child in log.root.manager.loggerDict:
+        if module in child:
+            cache = log.root.getChild(child)._cache
+            # If there are errors messages in the log, the cache will have the element 40: True
+            if 40 in cache and cache[40]:
+                error_string += f"\nErrors logged in {child} during execution"
+    if error_string:
+        sys.tracebacklimit = 0
+        raise RuntimeError(error_string)

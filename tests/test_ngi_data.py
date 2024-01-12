@@ -1,13 +1,10 @@
 import os
 
-import dotenv
 from unittest import mock
 import pytest
 import logging
 
 from daily_read import ngi_data, config
-
-dotenv.load_dotenv()
 
 LOGGER = logging.getLogger(__name__)
 
@@ -217,7 +214,7 @@ def test_data_loc_not_dir(mock_status, tmp_path):
 
 
 def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_rows, caplog):
-    """Test log output when no project dates are found in statusdb for a specifi project"""
+    """Test log output when no project dates are found in statusdb for a specific project"""
     from copy import deepcopy
 
     config_values = config.Config()
@@ -235,6 +232,66 @@ def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_row
             assert "No project dates found for NGI123459" in caplog.text
 
 
+def test_skip_order_with_no_year(data_repo_full, mocked_statusdb_conn_rows, caplog):
+    """Test that orders with no order year (i.e. with no contract signed) are skipped"""
+
+    config_values = config.Config()
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
+        data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
+        with caplog.at_level(logging.INFO):
+            data_master.get_data("NGI123460")
+            assert len(data_master.data.keys()) == 0
+            assert "NGI123460" not in data_master.data
+            assert "No order year found for order NGI123460, skipping it!" in caplog.text
+
+
+@mock.patch("daily_read.statusdb.StatusDBSession")
+def test_no_source_specified(mock_status):
+    """Test error thrown when no sources are specified"""
+
+    config_values = config.Config()
+    config_values.FETCH_FROM_NGIS = ""
+    config_values.FETCH_FROM_SNPSEQ = ""
+    config_values.FETCH_FROM_UGC = ""
+    with pytest.raises(ValueError, match="There are no sources specified to fetch data from!") as err:
+        ngi_data.ProjectDataMaster(config_values)
+
+
+def test_commit_staged_data(data_repo_full, mocked_statusdb_conn_rows):
+    """Test file is staged for commit and committed and then try adding it for staging again"""
+    config_values = config.Config()
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
+        data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
+        data_master.get_data()
+        data_master.save_data()
+        project_rec = data_master.data["NGI123457"]
+        assert project_rec.relative_path in data_master.data_repo.untracked_files
+
+        # Test add data for staging
+        data_master.stage_data_for_project(project_rec)
+        assert project_rec.relative_path in data_master.staged_files
+        no_of_staged_files = len(data_master.staged_files)
+
+        # Test commit staged data
+        data_master.commit_staged_data("Commit updates")
+
+        # Make sure everything staged is committed and nothing else
+        assert len(data_master.staged_files) == 0
+        assert len(data_master.data_repo.head.commit.diff("HEAD~1")) == no_of_staged_files
+
+        assert data_master.data_repo.head.commit.message == "Commit updates"
+        assert data_master.data_repo.head.commit.diff("HEAD~1")[0].a_path == project_rec.relative_path
+
+        # Test adding something that isn't changed
+        data_master.stage_data_for_project(project_rec)
+        assert project_rec.relative_path not in data_master.staged_files
+
+        # If nothing is added to stage
+        assert len(data_master.data_repo.head.commit.diff()) == 0
+
+
 # Planned tests #
 
 
@@ -242,18 +299,7 @@ def test_getting_data():
     # When some source fails
     # When all sources fails
     # When some source is not enabled
-    # When no source is enabled
     FETCH_FROM_NGIS = os.getenv("DAILY_READ_FETCH_FROM_NGIS")
     FETCH_FROM_SNPSEQ = os.getenv("DAILY_READ_FETCH_FROM_SNPSEQ")
     FETCH_FROM_UGC = os.getenv("DAILY_READ_FETCH_FROM_UGC")
     pass
-
-
-# Test add data for staging
-# If other things are added already
-# Test adding something that isn't changed
-
-# Test commit staged data
-# Make sure everything staged is committed
-# and nothing else
-# If nothing is added to stage

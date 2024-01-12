@@ -23,6 +23,9 @@ class ProjectDataMaster(object):
         if config.FETCH_FROM_UGC:
             sources.append(UGCProjectData(config))
 
+        if len(sources) == 0:
+            raise ValueError("There are no sources specified to fetch data from!")
+
         self.sources = sources
         self.source_names = [source.name for source in sources]
 
@@ -208,7 +211,7 @@ class ProjectDataMaster(object):
         return orderers
 
     def stage_data_for_project(self, project_record):
-        self.data_repo.index.add([project_record.file_name])
+        self.data_repo.index.add([project_record.relative_path])
 
     def commit_staged_data(self, message):
         self.data_repo.index.commit(message)
@@ -327,8 +330,12 @@ class StockholmProjectData(object):
             if close_date is None:
                 close_date = (datetime.datetime.now() - relativedelta(months=6)).strftime("%Y-%m-%d")
             for row in self.statusdb_session.rows(close_date=close_date):
-                order_year = row.value["order_year"]
                 portal_id = row.value["portal_id"]
+                order_year = row.value["order_year"]
+                # Should not happen, upstream manual entry error if it happens
+                if not order_year:
+                    log.error(f"No order year found for order {portal_id}, skipping it!")
+                    continue
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
 
                 project_dates = row.value["proj_dates"]
@@ -348,8 +355,12 @@ class StockholmProjectData(object):
         rows = self.statusdb_session.rows(close_date=close_date)
         for row in rows:
             if row.value["portal_id"] == project_id:
-                order_year = row.value["order_year"]
                 portal_id = row.value["portal_id"]
+                order_year = row.value["order_year"]
+                # Should not happen, upstream manual entry error if it happens
+                if not order_year:
+                    log.error(f"No order year found for order {portal_id}, skipping it!")
+                    return
                 relative_path = f"{self.dirname}/{order_year}/{portal_id}.json"
 
                 project_dates = row.value["proj_dates"]
