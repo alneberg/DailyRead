@@ -97,10 +97,13 @@ def generate_all(upload=False, develop=False):
             for status in modified_orders[owner]["projects"].keys():
                 for project in modified_orders[owner]["projects"][status]:
                     op.upload_report_to_order_portal(report, project, "published")
+                    op.projects_data.stage_data_for_project(project)
             # Hide old reports
             for status in modified_orders[owner]["delete_report_for"].keys():
                 for project in modified_orders[owner]["delete_report_for"][status]:
                     op.upload_report_to_order_portal("", project, "review")
+                    op.projects_data.stage_data_for_project(project)
+            op.projects_data.commit_staged_data(f"Commit reports updates for {datetime.datetime.now()}")
 
         else:
             log.info("Saving report to disk instead of uploading")
@@ -110,6 +113,7 @@ def generate_all(upload=False, develop=False):
                 config_values.STATUS_PRIORITY,
                 out_dir=config_values.REPORTS_LOCATION,
             )
+    daily_read.utils.error_reporting(log)
 
 
 @generate.command(
