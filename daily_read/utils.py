@@ -33,11 +33,11 @@ def get_git_commits():
 
 
 # Rudimentary Error reporting
-def error_reporting(log, module='all'):
+def error_reporting(log, module="all"):
     """Raise an error if there are Error level messages in the daily_read module logs"""
     error_string = ""
-    if module=='all':
-        module = 'daily_read'
+    if module == "all":
+        module = "daily_read"
     for child in log.root.manager.loggerDict:
         if module in child:
             cache = log.root.getChild(child)._cache
