@@ -41,7 +41,7 @@ def error_reporting(log, module="all"):
     for child in log.root.manager.loggerDict:
         if module in child:
             cache = log.root.getChild(child)._cache
-            # If there are errors messages in the log, the cache will the element 40: True
+            # If there are errors messages in the log, the cache will have the element 40: True
             if 40 in cache and cache[40]:
                 error_string += f"\nErrors logged in {child} during execution"
     if error_string:

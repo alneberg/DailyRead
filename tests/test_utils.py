@@ -5,7 +5,7 @@ from daily_read import utils
 
 
 def test_error_reporting_without_error():
-    """Test that no error is raised when log no has error messages"""
+    """Test that no error is raised when the log has no error messages"""
     daily_read_module_name = "tests"
     log = logging.getLogger(daily_read_module_name)
     log.info("Test info")
@@ -17,7 +17,7 @@ def test_error_reporting_without_error():
 
 
 def test_error_reporting_with_error():
-    """Test error thrown when log has error messages"""
+    """Test error thrown when the log has error messages"""
     daily_read_module_name = "tests"
     log = logging.getLogger(daily_read_module_name)
     log.error("Test error message")
