@@ -190,9 +190,16 @@ class ProjectDataMaster(object):
                     project_dates,
                     internal_id,
                     internal_name,
+                    internal_proj_status,
                 ) = ProjectDataRecord.data_from_file(project_path)
                 project_record = ProjectDataRecord(
-                    project_path, orderer, project_dates, internal_id, internal_name, self.config.STATUS_PRIORITY_REV
+                    project_path,
+                    orderer,
+                    project_dates,
+                    internal_id,
+                    internal_name,
+                    self.config.STATUS_PRIORITY_REV,
+                    internal_proj_status,
                 )
             projects_list.append(project_record)
 
@@ -223,7 +230,16 @@ class ProjectDataRecord(object):
     Raises ValueError if orderer is not present in data, if data is given
     """
 
-    def __init__(self, relative_path, orderer, project_dates, internal_id=None, internal_name=None, dates_prio=None):
+    def __init__(
+        self,
+        relative_path,
+        orderer,
+        project_dates,
+        internal_id=None,
+        internal_name=None,
+        dates_prio=None,
+        internal_proj_status=None,
+    ):
         """relative_path: e.g. "NGIS/2023/NGI0002313.json" """
         node_year, file_name = os.path.split(relative_path)
         node, year = os.path.split(node_year)
@@ -245,6 +261,7 @@ class ProjectDataRecord(object):
         self.internal_name = internal_name
         self.events = []  # List of tuples (date_value, (date_status, <ProjectDataRecord>))
         self.status = None
+        self.internal_proj_status = internal_proj_status
 
         for date_value, date_statuses in project_dates.items():
             for date_status in date_statuses:
@@ -284,6 +301,7 @@ class ProjectDataRecord(object):
             "project_dates": self.project_dates,
             "internal_id": self.internal_id,
             "internal_name": self.internal_name,
+            "internal_proj_status": self.internal_proj_status,
         }
 
     def data_from_file(relative_path):
@@ -299,7 +317,11 @@ class ProjectDataRecord(object):
         if "internal_name" in data:
             internal_name = data["internal_name"]
 
-        return data["orderer"], data["project_dates"], internal_id, internal_name
+        internal_proj_status = None
+        if "internal_proj_status" in data:
+            internal_proj_status = data["internal_proj_status"]
+
+        return data["orderer"], data["project_dates"], internal_id, internal_name, internal_proj_status
 
     def portal_id_from_path(path):
         """Class method to parse out project portal id (e.g. filename without extension) from given path"""
@@ -342,9 +364,16 @@ class StockholmProjectData(object):
                 orderer = row.value["orderer"]
                 internal_id = row.value["project_id"]
                 internal_name = row.value["project_name"]
+                internal_proj_status = row.value["status"]
 
                 self.data[portal_id] = ProjectDataRecord(
-                    relative_path, orderer, project_dates, internal_id, internal_name, self.dates_prio
+                    relative_path,
+                    orderer,
+                    project_dates,
+                    internal_id,
+                    internal_name,
+                    self.dates_prio,
+                    internal_proj_status,
                 )
 
         return self.data
@@ -367,9 +396,16 @@ class StockholmProjectData(object):
                 orderer = row.value["orderer"]
                 internal_id = row.value["project_id"]
                 internal_name = row.value["project_name"]
+                internal_proj_status = row.value["status"]
 
                 self.data[portal_id] = ProjectDataRecord(
-                    relative_path, orderer, project_dates, internal_id, internal_name, self.dates_prio
+                    relative_path,
+                    orderer,
+                    project_dates,
+                    internal_id,
+                    internal_name,
+                    self.dates_prio,
+                    internal_proj_status,
                 )
                 return
         raise ValueError(f"Project {project_id} not found in statusdb")
