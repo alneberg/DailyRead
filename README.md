@@ -1,8 +1,10 @@
 # The NGI Daily Read
 
+[![codecov](https://codecov.io/gh/NationalGenomicsInfrastructure/DailyRead/graph/badge.svg?token=P3M4Y1N4SU)](https://codecov.io/gh/NationalGenomicsInfrastructure/DailyRead)
+
 A utility to generate and upload automatic progress reports for NGI Sweden.
 
-## Suggested logic
+## How it works
 
 - The script first fetches data from the appropriate NGI source, i.e. statusdb for Stockholm.
 - The data corresponding to each project will then be saved in a small data file (json, yaml or csv perhaps) on disk.
@@ -21,20 +23,20 @@ Also see diagram below:
 ![alt text](doc/figures/overview_dark.png#gh-dark-mode-only)
 ![alt text](doc/figures/overview_light.png#gh-light-mode-only)
 
-## Planned Usage (yet to be implemented)
+## Usage
 
 ```bash
 # Generate reports and save in a local git repository (location is given by configuration variable) and commit changes with a timestamp message
 daily_read generate all
 
-# Generate report for single orderer, need location specified, will not create git commit
-daily_read generate single <ordererID> <location>
+# Generate report for single orderer,
+daily_read generate single --project <OrderID>
 
 # Generate and upload
 daily_read generate all --upload
-daily_read generate single <orderer>
-
 ```
+
+To generate and upload reports for a single user(or a list of users), their name(s) can be entered in a text file and provided to the environment variable `DAILY_READ_USERS_LIST_LOCATION`.
 
 ## Configuration variables
 
