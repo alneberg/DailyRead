@@ -17,6 +17,7 @@ dummy_order_open = {
     },
     "internal_id": "P123456",
     "internal_name": "D.Dummysson_23_01",
+    "internal_proj_status": "Ongoing",
 }
 
 dummy_order_closed = {
@@ -29,6 +30,7 @@ dummy_order_closed = {
     },
     "internal_id": "P123455",
     "internal_name": "D.Dummysson_23_02",
+    "internal_proj_status": "Ongoing",
 }
 
 order_portal_resp_order_processing = {
@@ -119,6 +121,26 @@ order_portal_resp_order_processing_mult_reports["reports"] = [
         },
     },
 ]
+
+order_portal_resp_order_processing_to_aborted = copy.deepcopy(order_portal_resp_order_processing)
+order_portal_resp_order_processing_to_aborted["identifier"] = "NGI123461"
+order_portal_resp_order_processing_to_aborted["reports"] = [
+    {
+        "iuid": "c5ee943",
+        "name": "Project Progress",
+        "filename": "project_progress.html",
+        "status": "published",
+        "modified": "2024-01-15T15:09:18.732Z",
+        "links": {
+            "api": {"href": "https://orderportal.example.com/orders/api/v1/report/c5ee943"},
+            "file": {"href": "https://orderportal.example.com/orders/report/c5ee943"},
+        },
+    },
+]
+order_portal_resp_order_processing_to_aborted["status"] = "Rejected"
+order_portal_resp_order_processing_to_aborted["history"]["rejected"] = "2024-01-16"
+order_portal_resp_order_processing_to_aborted["fields"]["project_ngi_identifier"] = "P123461"
+order_portal_resp_order_processing_to_aborted["fields"]["project_ngi_name"] = "D.Dummysson_23_07"
 
 order_portal_resp_order_closed = {
     "identifier": "NGI123455",
@@ -221,6 +243,7 @@ def data_repo_new_staged(data_repo):
         "NGIS/2023/staged_file2.json",
         "NGIS/2023/P123456.json",
         "NGIS/2023/P123453.json",
+        "NGIS/2023/P123461.json",
     ]
     _create_all_files(staged_files, data_repo.working_dir)
     data_repo.index.add(staged_files)
@@ -309,6 +332,7 @@ def mock_project_data_record():
                 dummy_order_open["internal_id"],
                 dummy_order_open["internal_name"],
                 config_values.STATUS_PRIORITY_REV,
+                dummy_order_open["internal_proj_status"],
             )
         if status == "closed":
             mock_record = ngi_data.ProjectDataRecord(
@@ -318,6 +342,7 @@ def mock_project_data_record():
                 dummy_order_closed["internal_id"],
                 dummy_order_closed["internal_name"],
                 config_values.STATUS_PRIORITY_REV,
+                dummy_order_closed["internal_proj_status"],
             )
         if status == "open_with_report":
             mock_record = ngi_data.ProjectDataRecord(
@@ -327,6 +352,17 @@ def mock_project_data_record():
                 dummy_order_open["internal_id"],
                 dummy_order_open["internal_name"],
                 config_values.STATUS_PRIORITY_REV,
+                dummy_order_open["internal_proj_status"],
+            )
+        if status == "open_to_aborted_with_report":
+            mock_record = ngi_data.ProjectDataRecord(
+                "NGIS/2023/NGI123461.json",
+                dummy_order_open["orderer"],
+                dummy_order_open["project_dates"],
+                "P123461",
+                "D.Dummysson_23_07",
+                config_values.STATUS_PRIORITY_REV,
+                "Aborted",
             )
         return mock_record
 
@@ -357,6 +393,7 @@ def mocked_requests_get(*args, **kwargs):
                     order_portal_resp_order_closed,
                     order_portal_resp_order_processing_mult_reports,
                     order_portal_resp_order_processing_single_report,
+                    order_portal_resp_order_processing_to_aborted,
                 ]
             },
             200,
@@ -412,7 +449,7 @@ def mocked_statusdb_conn_rows():
             "project_id": "P123460",
             "project_name": "D.Dummysson_23_06",
             "proj_dates": {},
-            "status": "Pending",
+            "status": "Reception control",
         },
     )
     return [row1, row2, row3]
