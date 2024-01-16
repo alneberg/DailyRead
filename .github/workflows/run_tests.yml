@@ -22,4 +22,8 @@ jobs:
           pip install pytest pytest-cov
       - name: Test with pytest
         run: |
-          python -m pytest --cov=daily_read tests
+          python -m pytest --cov=daily_read --cov-report=xml tests
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
