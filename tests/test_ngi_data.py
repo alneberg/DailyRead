@@ -178,7 +178,7 @@ def test_get_data_with_project(data_repo_full, mocked_statusdb_conn_rows):
         data_master.get_data(order_id)
         assert len(data_master.data.keys()) == 1
         assert order_id in data_master.data
-        assert data_master.data[order_id].internal_id_or_portal_id == order_id
+        assert data_master.data[order_id].internal_id_or_portal_id == "P123457"
 
 
 def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows):
