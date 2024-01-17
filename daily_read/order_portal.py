@@ -90,6 +90,10 @@ class OrderPortal(object):
                     delete_report = True
 
             proj_info = self.projects_data.data[order["identifier"]]
+
+            if proj_info.internal_proj_status in ["Aborted"]:
+                delete_report = True
+
             if order["reports"]:
                 prog_reports = [item for item in order["reports"] if item["name"] == "Project Progress"]
                 if prog_reports:
