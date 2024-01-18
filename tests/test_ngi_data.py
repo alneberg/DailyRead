@@ -171,12 +171,14 @@ def test_save_data_to_disk(data_repo_full, mocked_statusdb_conn_rows):
 def test_get_data_with_project(data_repo_full, mocked_statusdb_conn_rows):
     """Test getting data for a specific order"""
     config_values = config.Config()
+    order_id = "NGI123457"
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
-        data_master.get_data("NGI123457")
+        data_master.get_data(order_id)
         assert len(data_master.data.keys()) == 1
-        assert "NGI123457" in data_master.data
+        assert order_id in data_master.data
+        assert data_master.data[order_id].internal_id_or_portal_id == "P123457"
 
 
 def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows):
