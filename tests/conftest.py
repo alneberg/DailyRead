@@ -7,7 +7,7 @@ import pytest
 
 from datetime import date, timedelta
 
-from daily_read import ngi_data, config
+from daily_read import ngi_data, config, order_portal
 
 dummy_order_open = {
     "orderer": "dummy@dummy.se",
@@ -376,18 +376,13 @@ def create_report_path(tmp_path):
     return create_report_path
 
 
-def mocked_requests_get(*args, **kwargs):
+@pytest.fixture(autouse=True)
+def mocked_requests_get(monkeypatch):
+    """order_portal.OrderPortal._get() mocked to return {'items': [order list]}."""
+
     class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
-
         def json(self):
-            return self.json_data
-
-    if args[0] == "api/v1/orders":
-        return MockResponse(
-            {
+            return {
                 "items": [
                     order_portal_resp_order_processing,
                     order_portal_resp_order_closed,
@@ -395,11 +390,12 @@ def mocked_requests_get(*args, **kwargs):
                     order_portal_resp_order_processing_single_report,
                     order_portal_resp_order_processing_to_aborted,
                 ]
-            },
-            200,
-        )
+            }
 
-    return MockResponse(None, 404)
+    def mock_get(*args, **kwargs):
+        return MockResponse()
+
+    monkeypatch.setattr(order_portal.OrderPortal, "_get", mock_get)
 
 
 @pytest.fixture
@@ -414,10 +410,7 @@ def mocked_statusdb_conn_rows():
             "order_year": "2023",
             "project_id": "P123457",
             "project_name": "D.Dummysson_23_03",
-            "proj_dates": {
-                "2023-06-15": ["Samples Received"],
-                "2023-06-28": ["Reception Control finished", "Library QC finished"],
-            },
+            "proj_dates": dummy_order_open["project_dates"],
             "status": "Ongoing",
         },
     )
@@ -430,12 +423,7 @@ def mocked_statusdb_conn_rows():
             "order_year": "2023",
             "project_id": "P123458",
             "project_name": "T.Dummysson_23_04",
-            "proj_dates": {
-                "2023-06-15": ["Samples Received"],
-                "2023-06-28": ["Reception Control finished", "Library QC finished"],
-                "2023-07-28": ["All Samples Sequenced"],
-                "2023-07-29": ["All Raw data Delivered"],
-            },
+            "proj_dates": dummy_order_closed["project_dates"],
             "status": "Closed",
         },
     )

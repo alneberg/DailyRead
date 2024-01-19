@@ -6,8 +6,6 @@ import logging
 
 from daily_read import ngi_data, config
 
-LOGGER = logging.getLogger(__name__)
-
 ####################################################### TESTS #########################################################
 
 
