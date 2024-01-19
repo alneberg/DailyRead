@@ -1,10 +1,34 @@
 import base64
+import logging
 import pytest
 
-from conftest import mocked_requests_get
 from unittest import mock
 
 from daily_read import order_portal, config, ngi_data
+
+
+def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_data_record, caplog):
+    orderer = "dummy@dummy.se"
+    order_id = "NGI123456"
+    config_values = config.Config()
+    with mock.patch("daily_read.statusdb.StatusDBSession"):
+        data_master = ngi_data.ProjectDataMaster(config_values)
+
+    data_master.data = {order_id: mock_project_data_record("open")}
+
+    op = order_portal.OrderPortal(config_values, data_master)
+    op.get_orders(orderer=orderer)
+
+    assert op.all_orders[0]["identifier"] == order_id
+    modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
+    assert modified_orders[orderer]["projects"]["Library QC finished"][0] == data_master.data[order_id]
+    with mock.patch("daily_read.order_portal.requests.post") as mock_post:
+        mock_post.return_value.status_code = 404
+        uploaded = op.upload_report_to_order_portal(
+            "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
+        )
+        assert not uploaded
+        assert f"Report not uploaded for order with project id: {order_id}\nReason: 404" in caplog.text
 
 
 def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record):
@@ -18,8 +42,7 @@ def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_dat
     data_master.data = {order_id: mock_project_data_record("open")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[0]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
@@ -45,7 +68,7 @@ def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_dat
         )
 
 
-def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock_project_data_record, caplog):
     """Test getting, processing an open order with an existing Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123453"
@@ -56,31 +79,33 @@ def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock
     data_master.data = {order_id: mock_project_data_record("open_with_report")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[3]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
     assert modified_orders[orderer]["projects"]["Library QC finished"][0] == data_master.data[order_id]
     with mock.patch("daily_read.order_portal.requests.post") as mock_post:
         mock_post.return_value.status_code = 200
-        op.upload_report_to_order_portal(
-            "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
-        )
-        url = f"{config_values.ORDER_PORTAL_URL}/api/v1/report/{op.all_orders[3]['reports'][0]['iuid']}"
-        indata = dict(
-            order=order_id,
-            name="Project Progress",
-            status="published",
-            file=dict(
-                data=base64.b64encode("<html>test data</html>".encode()).decode("utf-8"),
-                filename="project_progress.html",
-                content_type="text/html",
-            ),
-        )
-        mock_post.assert_called_once_with(
-            url, headers={"X-OrderPortal-API-key": config_values.ORDER_PORTAL_API_KEY}, json=indata
-        )
+        with caplog.at_level(logging.INFO):
+            uploaded = op.upload_report_to_order_portal(
+                "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
+            )
+            url = f"{config_values.ORDER_PORTAL_URL}/api/v1/report/{op.all_orders[3]['reports'][0]['iuid']}"
+            indata = dict(
+                order=order_id,
+                name="Project Progress",
+                status="published",
+                file=dict(
+                    data=base64.b64encode("<html>test data</html>".encode()).decode("utf-8"),
+                    filename="project_progress.html",
+                    content_type="text/html",
+                ),
+            )
+            assert uploaded
+            mock_post.assert_called_once_with(
+                url, headers={"X-OrderPortal-API-key": config_values.ORDER_PORTAL_API_KEY}, json=indata
+            )
+            assert f"Updated report for order with project id: {order_id}" in caplog.text
 
 
 def test_get_and_process_orders_open_to_aborted_with_report_and_upload(data_repo_full, mock_project_data_record):
@@ -94,8 +119,7 @@ def test_get_and_process_orders_open_to_aborted_with_report_and_upload(data_repo
     data_master.data = {order_id: mock_project_data_record("open_to_aborted_with_report")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[4]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
@@ -128,8 +152,7 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record)
     data_master.data = {order_id: mock_project_data_record("closed")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[1]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
@@ -147,8 +170,7 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
     data_master.data = {order_id: mock_project_data_record("open")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[2]["identifier"] == order_id
     with pytest.raises(

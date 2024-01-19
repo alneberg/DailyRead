@@ -1,7 +1,6 @@
 import datetime
 import os
 
-from conftest import mocked_requests_get
 from unittest import mock
 
 from daily_read import daily_report, config, ngi_data, order_portal
@@ -19,8 +18,7 @@ def test_write_report_to_out_dir(data_repo_full, mock_project_data_record, creat
     data_master.data = {order_id: mock_project_data_record("open")}
 
     op = order_portal.OrderPortal(config_values, data_master)
-    with mock.patch("daily_read.order_portal.OrderPortal._get", side_effect=mocked_requests_get):
-        op.get_orders(orderer=orderer)
+    op.get_orders(orderer=orderer)
 
     assert op.all_orders[0]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
