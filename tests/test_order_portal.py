@@ -1,5 +1,5 @@
 import base64
-import loggingdaily_read/__main__.py
+import logging
 import pytest
 
 from unittest import mock
@@ -8,7 +8,7 @@ from daily_read import order_portal, config, ngi_data
 
 
 def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_data_record, caplog):
-    """Test getting and processing an open order and upload to Order portal failing """
+    """Test getting and processing an open order and upload to Order portal failing"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
     config_values = config.Config()
