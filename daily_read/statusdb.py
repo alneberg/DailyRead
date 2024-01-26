@@ -1,9 +1,8 @@
 """Classes for handling various utility functions"""
 
 
-import logging
-
 import couchdb
+import logging
 
 log = logging.getLogger(__name__)
 

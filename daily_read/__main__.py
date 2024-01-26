@@ -106,7 +106,9 @@ def generate_all(upload=False, develop=False):
                                 op.projects_data.stage_data_for_project(project)
                         # catch any and every exception during upload
                         except Exception as e:
-                            log.error(f"Exception Raised: Issue in uploading/hiding reports for {project.project_id}: {e}\nContinuing to next project")
+                            log.error(
+                                f"Exception Raised: Issue in uploading/hiding reports for {project.project_id}: {e}\nContinuing to next project"
+                            )
             # Commit all uploaded projects
             op.projects_data.commit_staged_data(f"Commit reports updates for {datetime.datetime.now()}")
 
