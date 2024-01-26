@@ -1,6 +1,5 @@
 """Classes for handling various utility functions"""
 
-
 import couchdb
 import logging
 
