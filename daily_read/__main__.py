@@ -93,20 +93,22 @@ def generate_all(upload=False, develop=False):
     for owner in modified_orders:
         if upload:
             report = daily_rep.populate_and_write_report(owner, modified_orders[owner], config_values.STATUS_PRIORITY)
-            # Publish reports
-            for status in modified_orders[owner]["projects"].keys():
-                for project in modified_orders[owner]["projects"][status]:
-                    uploaded = False
-                    uploaded = op.upload_report_to_order_portal(report, project, "published")
-                    if uploaded:
-                        op.projects_data.stage_data_for_project(project)
-            # Hide old reports
-            for status in modified_orders[owner]["delete_report_for"].keys():
-                for project in modified_orders[owner]["delete_report_for"][status]:
-                    uploaded = False
-                    uploaded = op.upload_report_to_order_portal("", project, "review")
-                    if uploaded:
-                        op.projects_data.stage_data_for_project(project)
+            # Publish reports with published, hide reports with review
+            for upload_category, report_state in {"projects": "published", "delete_report_for": "review"}.items():
+                for status in modified_orders[owner][upload_category].keys():
+                    for project in modified_orders[owner][upload_category][status]:
+                        uploaded = False
+                        report_upload = report if upload_category == "projects" else ""
+                        try:
+                            uploaded = op.upload_report_to_order_portal(report_upload, project, report_state)
+                            # Stage changes only if report was uploaded
+                            if uploaded:
+                                op.projects_data.stage_data_for_project(project)
+                        # catch any and every exception during upload
+                        except Exception as e:
+                            log.error(
+                                f"Exception Raised: Issue in uploading/hiding reports for {project.project_id}: {e}\nContinuing to next project"
+                            )
             # Commit all uploaded projects
             op.projects_data.commit_staged_data(f"Commit reports updates for {datetime.datetime.now()}")
 

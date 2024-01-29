@@ -162,7 +162,8 @@ class OrderPortal(object):
         response = requests.post(url, headers=self.headers, json=indata)
 
         if response.status_code == 200:
-            log.info(f"Updated report for order with project id: {project.project_id}")
+            operation = "Updated" if report else "Hid"
+            log.info(f"{operation} report for order with project id: {project.project_id}")
             return True
         else:
             log.error(
