@@ -162,6 +162,9 @@
               <div class="fs-1">
                 {{ date_type }}
               </div>
+              <div class="fs-5">
+              <i class="bi bi-patch-question px-1" data-bs-toggle="tooltip" data-bs-title="{{status_desc[date_type]}}"></i>
+              </div>
             </div>
             <div class="col-sm projects-accordions">
               {% for project in data["projects"][date_type] %}
