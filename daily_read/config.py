@@ -1,8 +1,11 @@
 import os
 
+import dotenv
+
 
 class Config(object):
     def __init__(self):
+        dotenv.load_dotenv()
         self.ORDER_PORTAL_URL = os.getenv("DAILY_READ_ORDER_PORTAL_URL")
         self.ORDER_PORTAL_API_KEY = os.getenv("DAILY_READ_ORDER_PORTAL_API_KEY")
         self.REPORTS_LOCATION = os.getenv("DAILY_READ_REPORTS_LOCATION")
