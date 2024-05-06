@@ -11,7 +11,6 @@ import sys
 # Installed
 import click
 from dateutil.relativedelta import relativedelta
-import dotenv
 from rich.logging import RichHandler
 
 # Own
@@ -22,7 +21,6 @@ import daily_read.order_portal
 import daily_read.utils
 
 
-dotenv.load_dotenv()
 config_values = daily_read.config.Config()
 
 rich_handler = RichHandler()
