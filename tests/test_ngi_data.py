@@ -73,7 +73,7 @@ def test_modified_or_new_untracked(data_repo_untracked, get_env_file_path):
     assert "untracked_file" in file_names[0]
 
 
-def test_modified_or_new_staged(data_repo_new_staged,get_env_file_path):
+def test_modified_or_new_staged(data_repo_new_staged, get_env_file_path):
     config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)

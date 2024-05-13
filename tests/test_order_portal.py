@@ -69,7 +69,9 @@ def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_dat
         )
 
 
-def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock_project_data_record, caplog, get_env_file_path):
+def test_get_and_process_orders_open_with_report_and_upload(
+    data_repo_full, mock_project_data_record, caplog, get_env_file_path
+):
     """Test getting, processing an open order with an existing Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123453"
@@ -109,7 +111,9 @@ def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock
             assert f"Updated report for order with project id: {order_id}" in caplog.text
 
 
-def test_get_and_process_orders_open_to_aborted_with_report_and_upload(data_repo_full, mock_project_data_record, get_env_file_path):
+def test_get_and_process_orders_open_to_aborted_with_report_and_upload(
+    data_repo_full, mock_project_data_record, get_env_file_path
+):
     """Test getting, processing an open order with an existing Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123461"
