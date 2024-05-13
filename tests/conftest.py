@@ -323,7 +323,7 @@ def data_repo_full(
 @pytest.fixture
 def mock_project_data_record():
     def _method(status):
-        config_values = config.Config()
+        config_values = config.Config(env_file_path=".test.env")
         if status == "open":
             mock_record = ngi_data.ProjectDataRecord(
                 "NGIS/2023/NGI123456.json",
@@ -441,3 +441,10 @@ def mocked_statusdb_conn_rows():
         },
     )
     return [row1, row2, row3]
+
+
+@pytest.fixture(autouse=True)
+def get_env_file_path():
+    """returns the test env file path"""
+
+    return ".test.env"

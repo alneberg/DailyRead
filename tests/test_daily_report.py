@@ -6,11 +6,11 @@ from unittest import mock
 from daily_read import daily_report, config, ngi_data, order_portal
 
 
-def test_write_report_to_out_dir(data_repo_full, mock_project_data_record, create_report_path):
+def test_write_report_to_out_dir(data_repo_full, mock_project_data_record, create_report_path, get_env_file_path):
     """Test existence of html report when provided with out_dir"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
-    config_values = config.Config()
+    config_values = config.Config(env_file_path=get_env_file_path)
     daily_rep = daily_report.DailyReport()
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
