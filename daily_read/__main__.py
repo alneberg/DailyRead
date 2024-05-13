@@ -22,13 +22,13 @@ import daily_read.utils
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.option('--env_file_path', type=click.Path())
+@click.option("--env_file_path", type=click.Path())
 @click.pass_context
 def daily_read_cli(ctx, env_file_path):
     config_values = daily_read.config.Config(env_file_path=env_file_path)
     if ctx.obj is None:
         ctx.obj = dict()
-    ctx.obj['config_values'] = config_values
+    ctx.obj["config_values"] = config_values
 
     rich_handler = RichHandler()
     rich_handler.setFormatter(logging.Formatter("%(message)s"))
@@ -47,12 +47,12 @@ def daily_read_cli(ctx, env_file_path):
     )  # 5 files of 100MB
     rotating_file_handler.addFilter(daily_read.utils.ContextFilter())
 
-
     logging.basicConfig(
         level="INFO",
         format=LOG_FORMAT,
         handlers=[rich_handler, rotating_file_handler],
     )
+
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ def generate(ctx):
 @click.pass_context
 def generate_all(ctx, upload=False, develop=False):
     # Fetch data from all sources (configurable)
-    config_values = ctx.obj['config_values']
+    config_values = ctx.obj["config_values"]
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
 
     log.info(f"Fetching data for {projects_data.source_names}")
@@ -144,7 +144,7 @@ def generate_all(ctx, upload=False, develop=False):
 )
 @click.pass_context
 def generate_single(ctx, project, include_older=False):
-    config_values = ctx.obj['config_values']
+    config_values = ctx.obj["config_values"]
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
     # Fetch all projects so that the report will look the same
     log.info("Fetching data from NGI sources")
