@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.0.1"
+from daily_read import __version__
 
 with open("README.md") as f:
     readme = f.read()
@@ -10,7 +10,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="Daily Read",
-    version=version,
+    version=__version__,
     description="A utility to generate and upload automatic progress reports for NGI Sweden.",
     long_description=readme,
     long_description_content_type="text/markdown",

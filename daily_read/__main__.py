@@ -21,43 +21,46 @@ import daily_read.order_portal
 import daily_read.utils
 
 
-config_values = daily_read.config.Config()
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option('--env_file_path', type=click.Path())
+@click.pass_context
+def daily_read_cli(ctx, env_file_path):
+    config_values = daily_read.config.Config(env_file_path=env_file_path)
+    if ctx.obj is None:
+        ctx.obj = dict()
+    ctx.obj['config_values'] = config_values
 
-rich_handler = RichHandler()
-rich_handler.setFormatter(logging.Formatter("%(message)s"))
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - Commit: %(commit)s - %(message)s"
+    rich_handler = RichHandler()
+    rich_handler.setFormatter(logging.Formatter("%(message)s"))
+    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - Commit: %(commit)s - %(message)s"
 
-if not os.path.isabs(config_values.LOG_LOCATION):
-    raise ValueError(f"Log location is not an absolute path: {config_values.LOG_LOCATION}")
+    if not os.path.isabs(config_values.LOG_LOCATION):
+        raise ValueError(f"Log location is not an absolute path: {config_values.LOG_LOCATION}")
 
-if os.path.exists(config_values.LOG_LOCATION) and not os.path.isdir(config_values.LOG_LOCATION):
-    raise ValueError(f"Log Location exists but is not a directory: {config_values.LOG_LOCATION}")
+    if os.path.exists(config_values.LOG_LOCATION) and not os.path.isdir(config_values.LOG_LOCATION):
+        raise ValueError(f"Log Location exists but is not a directory: {config_values.LOG_LOCATION}")
 
-log_file = os.path.join(config_values.LOG_LOCATION, "DailyRead.log")
+    log_file = os.path.join(config_values.LOG_LOCATION, "DailyRead.log")
 
-rotating_file_handler = logging.handlers.RotatingFileHandler(
-    log_file, maxBytes=1024 * 1024 * 100, backupCount=5
-)  # 5 files of 100MB
-rotating_file_handler.addFilter(daily_read.utils.ContextFilter())
+    rotating_file_handler = logging.handlers.RotatingFileHandler(
+        log_file, maxBytes=1024 * 1024 * 100, backupCount=5
+    )  # 5 files of 100MB
+    rotating_file_handler.addFilter(daily_read.utils.ContextFilter())
 
 
-logging.basicConfig(
-    level="INFO",
-    format=LOG_FORMAT,
-    handlers=[rich_handler, rotating_file_handler],
-)
+    logging.basicConfig(
+        level="INFO",
+        format=LOG_FORMAT,
+        handlers=[rich_handler, rotating_file_handler],
+    )
 
 log = logging.getLogger(__name__)
 
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-def daily_read_cli():
-    pass
-
-
 ### GENERATE ###
 @daily_read_cli.group()
-def generate():
+@click.pass_context
+def generate(ctx):
     """Generate reports and save in a local git repository"""
     pass
 
@@ -65,8 +68,10 @@ def generate():
 @generate.command(name="all")
 @click.option("-u", "--upload", is_flag=True, help="Trigger upload of reports.")
 @click.option("--develop", is_flag=True, help="Only generate max 5 reports, for dev purposes.")
-def generate_all(upload=False, develop=False):
+@click.pass_context
+def generate_all(ctx, upload=False, develop=False):
     # Fetch data from all sources (configurable)
+    config_values = ctx.obj['config_values']
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
 
     log.info(f"Fetching data for {projects_data.source_names}")
@@ -137,7 +142,9 @@ def generate_all(upload=False, develop=False):
     help="Include projects that are older than 6 months.",
     is_flag=True,
 )
-def generate_single(project, include_older=False):
+@click.pass_context
+def generate_single(ctx, project, include_older=False):
+    config_values = ctx.obj['config_values']
     projects_data = daily_read.ngi_data.ProjectDataMaster(config_values)
     # Fetch all projects so that the report will look the same
     log.info("Fetching data from NGI sources")
