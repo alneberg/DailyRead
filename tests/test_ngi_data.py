@@ -9,9 +9,9 @@ from daily_read import ngi_data, config
 ####################################################### TESTS #########################################################
 
 
-def test_create_project_data_master(data_repo_full):
+def test_create_project_data_master(data_repo_full, get_env_file_path):
     """With existing git repo, test creation of a ProjectDataMaster class"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -21,9 +21,9 @@ def test_create_project_data_master(data_repo_full):
     assert data_master._data_fetched == False
 
 
-def test_create_project_data_master_no_commit(data_repo_no_commit):
+def test_create_project_data_master_no_commit(data_repo_no_commit, get_env_file_path):
     """With existing git repo but without commits, test creation of a ProjectDataMaster class"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -35,8 +35,8 @@ def test_create_project_data_master_no_commit(data_repo_no_commit):
     assert data_master.data_repo.commit().message == "Empty file as a first commit"
 
 
-def test_modified_or_new_no_commit(data_repo_no_commit):
-    config_values = config.Config()
+def test_modified_or_new_no_commit(data_repo_no_commit, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -47,8 +47,8 @@ def test_modified_or_new_no_commit(data_repo_no_commit):
     assert len(set(file_names)) == 0
 
 
-def test_modified_or_new(data_repo_full):
-    config_values = config.Config()
+def test_modified_or_new(data_repo_full, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -59,8 +59,8 @@ def test_modified_or_new(data_repo_full):
     assert len(set(file_names)) == 12
 
 
-def test_modified_or_new_untracked(data_repo_untracked):
-    config_values = config.Config()
+def test_modified_or_new_untracked(data_repo_untracked, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -73,8 +73,8 @@ def test_modified_or_new_untracked(data_repo_untracked):
     assert "untracked_file" in file_names[0]
 
 
-def test_modified_or_new_staged(data_repo_new_staged):
-    config_values = config.Config()
+def test_modified_or_new_staged(data_repo_new_staged, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -86,8 +86,8 @@ def test_modified_or_new_staged(data_repo_new_staged):
     assert any("staged_file" in s for s in file_names)
 
 
-def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
-    config_values = config.Config()
+def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -100,8 +100,8 @@ def test_modified_or_new_modified_not_staged(data_repo_modified_not_staged):
     assert "modified_file" in file_names[0]
 
 
-def test_modified_or_new_modified_staged(data_repo_modified_staged):
-    config_values = config.Config()
+def test_modified_or_new_modified_staged(data_repo_modified_staged, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -114,8 +114,8 @@ def test_modified_or_new_modified_staged(data_repo_modified_staged):
     assert "modified_staged_file" in file_names[0]
 
 
-def test_modified_or_new_tracked(data_repo_tracked):
-    config_values = config.Config()
+def test_modified_or_new_tracked(data_repo_tracked, get_env_file_path):
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -127,9 +127,9 @@ def test_modified_or_new_tracked(data_repo_tracked):
     assert len(set(file_names)) == 0
 
 
-def test_get_unique_orderers(data_repo_full):
+def test_get_unique_orderers(data_repo_full, get_env_file_path):
     """Test getting unique orders in the project data from statusdb"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.get_data()
@@ -137,9 +137,9 @@ def test_get_unique_orderers(data_repo_full):
         assert orderers == set(["dummy@dummy.se"])
 
 
-def test_user_list(data_repo_full, tmp_path, mocked_statusdb_conn_rows):
+def test_user_list(data_repo_full, tmp_path, mocked_statusdb_conn_rows, get_env_file_path):
     """Test getting and reading users from the user list url"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     temp_file = tmp_path / "test_file.txt"
     temp_file.write_text("dummy@dummy.se\ntest@dummy.se")
     config_values.USERS_LIST_LOCATION = temp_file
@@ -154,9 +154,9 @@ def test_user_list(data_repo_full, tmp_path, mocked_statusdb_conn_rows):
         assert orderers == set(["dummy@dummy.se", "test@dummy.se"])
 
 
-def test_save_data_to_disk(data_repo_full, mocked_statusdb_conn_rows):
+def test_save_data_to_disk(data_repo_full, mocked_statusdb_conn_rows, get_env_file_path):
     """Test saving in git repo the data gotten from statusdb"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
@@ -166,9 +166,9 @@ def test_save_data_to_disk(data_repo_full, mocked_statusdb_conn_rows):
         assert os.path.exists(os.path.join(config_values.DATA_LOCATION, "NGIS/2023/NGI123458.json"))
 
 
-def test_get_data_with_project(data_repo_full, mocked_statusdb_conn_rows):
+def test_get_data_with_project(data_repo_full, mocked_statusdb_conn_rows, get_env_file_path):
     """Test getting data for a specific order"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     order_id = "NGI123457"
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
@@ -179,9 +179,9 @@ def test_get_data_with_project(data_repo_full, mocked_statusdb_conn_rows):
         assert data_master.data[order_id].internal_id_or_portal_id == "P123457"
 
 
-def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows):
+def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows, get_env_file_path):
     """Test error thrown when the order specified is not found in statusdb"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
@@ -190,9 +190,9 @@ def test_get_data_with_project_unknown(data_repo_full, mocked_statusdb_conn_rows
 
 
 @mock.patch("daily_read.statusdb.StatusDBSession")
-def test_data_loc_not_abs(mock_status):
+def test_data_loc_not_abs(mock_status, get_env_file_path):
     """Test error thrown when given data location is not an absolute path"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     config_values.DATA_LOCATION = "tests/test_data_location"
     with pytest.raises(
         ValueError, match=f"Data location is not an absolute path: {config_values.DATA_LOCATION}"
@@ -201,9 +201,9 @@ def test_data_loc_not_abs(mock_status):
 
 
 @mock.patch("daily_read.statusdb.StatusDBSession")
-def test_data_loc_not_dir(mock_status, tmp_path):
+def test_data_loc_not_dir(mock_status, tmp_path, get_env_file_path):
     """Test error thrown when data location is not a directory"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     temp_file = tmp_path / "test_file.txt"
     temp_file.write_text("test")
     config_values.DATA_LOCATION = temp_file
@@ -213,11 +213,11 @@ def test_data_loc_not_dir(mock_status, tmp_path):
         ngi_data.ProjectDataMaster(config_values)
 
 
-def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_rows, caplog):
+def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_rows, caplog, get_env_file_path):
     """Test log output when no project dates are found in statusdb for a specific project"""
     from copy import deepcopy
 
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
@@ -232,10 +232,10 @@ def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_row
             assert "No project dates found for NGI123459" in caplog.text
 
 
-def test_skip_order_with_no_year(data_repo_full, mocked_statusdb_conn_rows, caplog):
+def test_skip_order_with_no_year(data_repo_full, mocked_statusdb_conn_rows, caplog, get_env_file_path):
     """Test that orders with no order year (i.e. with no contract signed) are skipped"""
 
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows
@@ -247,10 +247,10 @@ def test_skip_order_with_no_year(data_repo_full, mocked_statusdb_conn_rows, capl
 
 
 @mock.patch("daily_read.statusdb.StatusDBSession")
-def test_no_source_specified(mock_status):
+def test_no_source_specified(mock_status, get_env_file_path):
     """Test error thrown when no sources are specified"""
 
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     config_values.FETCH_FROM_NGIS = ""
     config_values.FETCH_FROM_SNPSEQ = ""
     config_values.FETCH_FROM_UGC = ""
@@ -258,9 +258,9 @@ def test_no_source_specified(mock_status):
         ngi_data.ProjectDataMaster(config_values)
 
 
-def test_commit_staged_data(data_repo_full, mocked_statusdb_conn_rows):
+def test_commit_staged_data(data_repo_full, mocked_statusdb_conn_rows, get_env_file_path):
     """Test file is staged for commit and committed and then try adding it for staging again"""
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
         data_master.sources[0].statusdb_session.rows.return_value = mocked_statusdb_conn_rows

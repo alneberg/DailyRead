@@ -1,3 +1,4 @@
-import daily_read.config
+""" DailyRead version
+"""
 
-config_values = daily_read.config.Config()
+__version__ = "0.0.1"

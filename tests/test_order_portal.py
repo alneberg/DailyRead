@@ -7,11 +7,11 @@ from unittest import mock
 from daily_read import order_portal, config, ngi_data
 
 
-def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_data_record, caplog):
+def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_data_record, caplog, get_env_file_path):
     """Test getting and processing an open order and upload to Order portal failing"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -32,11 +32,11 @@ def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_da
         assert f"Report not uploaded for order with project id: {order_id}\nReason: 404" in caplog.text
 
 
-def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record, get_env_file_path):
     """Test getting and processing an open order and uploading its Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123456"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -69,11 +69,13 @@ def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_dat
         )
 
 
-def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock_project_data_record, caplog):
+def test_get_and_process_orders_open_with_report_and_upload(
+    data_repo_full, mock_project_data_record, caplog, get_env_file_path
+):
     """Test getting, processing an open order with an existing Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123453"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -109,11 +111,13 @@ def test_get_and_process_orders_open_with_report_and_upload(data_repo_full, mock
             assert f"Updated report for order with project id: {order_id}" in caplog.text
 
 
-def test_get_and_process_orders_open_to_aborted_with_report_and_upload(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_open_to_aborted_with_report_and_upload(
+    data_repo_full, mock_project_data_record, get_env_file_path
+):
     """Test getting, processing an open order with an existing Project progress report and uploading the report to the Order portal"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123461"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -142,11 +146,11 @@ def test_get_and_process_orders_open_to_aborted_with_report_and_upload(data_repo
         )
 
 
-def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record, get_env_file_path):
     """Test getting and processing an order closed within the timeframe of Project progress report deletion"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123455"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -160,11 +164,11 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record)
     assert modified_orders[orderer]["delete_report_for"]["All Raw data Delivered"][0] == data_master.data[order_id]
 
 
-def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_record):
+def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_record, get_env_file_path):
     """Test getting and processing orders with multiple Project progress reports"""
     orderer = "dummy@dummy.se"
     order_id = "NGI123454"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
     with mock.patch("daily_read.statusdb.StatusDBSession"):
         data_master = ngi_data.ProjectDataMaster(config_values)
 
@@ -180,10 +184,10 @@ def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_r
         op.process_orders(config_values.STATUS_PRIORITY_REV)
 
 
-def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record):
+def test_base_url_and_api_key_not_set(data_repo_full, mock_project_data_record, get_env_file_path):
     """Test the conditions when environment variables ORDER_PORTAL_URL and ORDER_PORTAL_API_KEY are not set"""
     order_id = "NGI123456"
-    config_values = config.Config()
+    config_values = config.Config(get_env_file_path)
 
     order_portal_url = config_values.ORDER_PORTAL_URL
     api_key = config_values.ORDER_PORTAL_API_KEY
