@@ -161,12 +161,12 @@ class OrderPortal(object):
         # TODO: check Encoded to utf-8 to display special characters properly
         response = requests.post(url, headers=self.headers, json=indata)
 
+        operation = "updated" if report else "hidden"
         if response.status_code == 200:
-            operation = "Updated" if report else "Hid"
-            log.info(f"{operation} report for order with project id: {project.project_id}")
+            log.info(f"Report {operation} for order with project id: {project.project_id}")
             return True
         else:
             log.error(
-                f"Report not uploaded for order with project id: {project.project_id}\nReason: {response.status_code} {response.reason}"
+                f"Report not {operation} for order with project id: {project.project_id}\nReason: {response.status_code} {response.reason}"
             )
             return False
