@@ -100,20 +100,18 @@ def generate_all(ctx, upload=False, develop=False):
             for upload_category, report_state in {"projects": "published", "delete_report_for": "review"}.items():
                 for status in modified_orders[owner][upload_category].keys():
                     for project in modified_orders[owner][upload_category][status]:
-                        uploaded = False
+                        request_success = False
                         report_upload = report if upload_category == "projects" else ""
                         try:
-                            uploaded = op.upload_report_to_order_portal(report_upload, project, report_state)
-                            # Stage changes only if report was uploaded
-                            if uploaded:
+                            request_success = op.upload_report_to_order_portal(report_upload, project, report_state)
+                            # Stage changes
+                            if request_success:
                                 op.projects_data.stage_data_for_project(project)
                         # catch any and every exception during upload
                         except Exception as e:
                             log.error(
                                 f"Exception Raised: Issue in uploading/hiding reports for {project.project_id}: {e}\nContinuing to next project"
                             )
-            # Commit all uploaded projects
-            op.projects_data.commit_staged_data(f"Commit reports updates for {datetime.datetime.now()}")
 
         else:
             log.info("Saving report to disk instead of uploading")
@@ -123,6 +121,10 @@ def generate_all(ctx, upload=False, develop=False):
                 config_values.STATUS_PRIORITY,
                 out_dir=config_values.REPORTS_LOCATION,
             )
+    if upload:
+        # Commit all uploaded projects
+        op.projects_data.commit_staged_data(f"Commit reports updates for {datetime.datetime.now()}")
+
     daily_read.utils.error_reporting(log)
 
 

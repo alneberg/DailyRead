@@ -29,7 +29,7 @@ def test_get_and_process_orders_open_upload_fail(data_repo_full, mock_project_da
             "<html>test data</html>", modified_orders[orderer]["projects"]["Library QC finished"][0], "published"
         )
         assert not uploaded
-        assert f"Report not uploaded for order with project id: {order_id}\nReason: 404" in caplog.text
+        assert f"Report not updated for order with project id: {order_id}\nReason: 404" in caplog.text
 
 
 def test_get_and_process_orders_open_and_upload(data_repo_full, mock_project_data_record, get_env_file_path):
@@ -108,7 +108,7 @@ def test_get_and_process_orders_open_with_report_and_upload(
             mock_post.assert_called_once_with(
                 url, headers={"X-OrderPortal-API-key": config_values.ORDER_PORTAL_API_KEY}, json=indata
             )
-            assert f"Updated report for order with project id: {order_id}" in caplog.text
+            assert f"Report updated for order with project id: {order_id}" in caplog.text
 
 
 def test_get_and_process_orders_open_to_aborted_with_report_and_upload(
