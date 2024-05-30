@@ -278,7 +278,8 @@ class ProjectDataRecord(object):
             else:
                 self.status = latest_statuses[0]
         else:
-            log.info(f"No project dates found for {project_id}")
+            log.info(f"No project dates found for {project_id}, so setting its status to Pending")
+            self.status = "Pending"
 
     @property
     def internal_id_or_portal_id(self):

@@ -23,11 +23,12 @@ STATUS_ICONS = {
 }
 
 STATUS_DESCRIPTIONS = {
-    "All Raw data Delivered": "The data has been made available through NGIs delivery system",
-    "All Samples Sequenced": "Sequencing (including potential resequencing) of all samples has been finished",
+    "All Raw data Delivered": "The data has been made available through NGIs delivery system.",
+    "All Samples Sequenced": "Sequencing (including potential resequencing) of all samples has been finished.",
     "Library QC finished": "Library QC is a quality control of the sequencing library produced either by NGI or supplied by you, depending on the type of project.",
     "Reception Control finished": "Reception Control consists of NGI staff measuring e.g. concentration and volume for the samples received.",
-    "Samples Received": "The samples have been received and registered at NGI",
+    "Samples Received": "The samples have been received and registered at NGI.",
+    "Pending": "The order has been set up but the samples have not yet been received by NGI.",
 }
 
 PORTAL_URL = "https://ngisweden.scilifelab.se/orders"

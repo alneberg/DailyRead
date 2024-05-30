@@ -229,7 +229,8 @@ def test_get_data_with_no_project_dates(data_repo_full, mocked_statusdb_conn_row
             data_master.get_data("NGI123459")
             assert len(data_master.data.keys()) == 1
             assert "NGI123459" in data_master.data
-            assert "No project dates found for NGI123459" in caplog.text
+            assert "No project dates found for NGI123459, so setting its status to Pending" in caplog.text
+            assert data_master.data["NGI123459"].status == "Pending"
 
 
 def test_skip_order_with_no_year(data_repo_full, mocked_statusdb_conn_rows, caplog, get_env_file_path):
