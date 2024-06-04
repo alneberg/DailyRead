@@ -20,7 +20,7 @@ class Config(object):
         self.FETCH_FROM_SNPSEQ = os.getenv("DAILY_READ_FETCH_FROM_SNPSEQ")
         self.FETCH_FROM_UGC = os.getenv("DAILY_READ_FETCH_FROM_UGC")
         self.STATUS_PRIORITY = {
-            0: "None",
+            0: "Pending",
             1: "Samples Received",
             2: "Reception Control finished",
             3: "Library QC finished",
