@@ -25,6 +25,6 @@ class Config(object):
             2: "Reception Control Finished",
             3: "Library QC Finished",
             4: "All Samples Sequenced",
-            5: "All Raw data Delivered",
+            5: "All Raw Data Delivered",
         }
         self.STATUS_PRIORITY_REV = {v: k for k, v in self.STATUS_PRIORITY.items()}

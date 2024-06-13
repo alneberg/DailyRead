@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 STATUS_ICONS = {
-    "All Raw data Delivered": "cloud-download",
+    "All Raw Data Delivered": "cloud-download",
     "All Samples Sequenced": "body-text",
     "Library QC Finished": "check2-all",
     "Reception Control Finished": "check2",
@@ -23,7 +23,7 @@ STATUS_ICONS = {
 }
 
 STATUS_DESCRIPTIONS = {
-    "All Raw data Delivered": "The data has been made available through NGIs delivery system.",
+    "All Raw Data Delivered": "The data has been made available through NGIs delivery system.",
     "All Samples Sequenced": "Sequencing (including potential resequencing) of all samples has been finished.",
     "Library QC Finished": "Library QC is a quality control of the sequencing library produced either by NGI or supplied by you, depending on the type of project.",
     "Reception Control Finished": "Reception Control consists of NGI staff measuring e.g. concentration and volume for the samples received.",

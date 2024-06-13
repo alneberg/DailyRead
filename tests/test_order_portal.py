@@ -161,7 +161,7 @@ def test_get_and_process_orders_closed(data_repo_full, mock_project_data_record,
 
     assert op.all_orders[1]["identifier"] == order_id
     modified_orders = op.process_orders(config_values.STATUS_PRIORITY_REV)
-    assert modified_orders[orderer]["delete_report_for"]["All Raw data Delivered"][0] == data_master.data[order_id]
+    assert modified_orders[orderer]["delete_report_for"]["All Raw Data Delivered"][0] == data_master.data[order_id]
 
 
 def test_get_and_process_orders_mult_reports(data_repo_full, mock_project_data_record, get_env_file_path):

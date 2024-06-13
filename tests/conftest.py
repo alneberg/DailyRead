@@ -26,7 +26,7 @@ dummy_order_closed = {
         "2023-06-15": ["Samples Received"],
         "2023-06-28": ["Reception Control Finished", "Library QC Finished"],
         "2023-07-28": ["All Samples Sequenced"],
-        "2023-07-29": ["All Raw data Delivered"],
+        "2023-07-29": ["All Raw Data Delivered"],
     },
     "internal_id": "P123455",
     "internal_name": "D.Dummysson_23_02",
