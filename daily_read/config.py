@@ -22,8 +22,8 @@ class Config(object):
         self.STATUS_PRIORITY = {
             0: "Pending",
             1: "Samples Received",
-            2: "Reception Control finished",
-            3: "Library QC finished",
+            2: "Reception Control Finished",
+            3: "Library QC Finished",
             4: "All Samples Sequenced",
             5: "All Raw data Delivered",
         }
